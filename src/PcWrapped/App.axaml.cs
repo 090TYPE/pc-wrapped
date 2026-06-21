@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using PcWrapped.Core.Settings;
 using PcWrapped.Core.Storage;
 using PcWrapped.Core.Tracking;
 using PcWrapped.Native;
@@ -28,12 +29,17 @@ public partial class App : Application
         var dir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PcWrapped");
         Directory.CreateDirectory(dir);
+
+        var settingsStore = new JsonSettingsStore(Path.Combine(dir, "settings.json"));
+        var settings = settingsStore.Load();
+
         _repo = new SqliteStatsRepository($"Data Source={Path.Combine(dir, "stats.db")}");
         await _repo.InitializeAsync();
         await _repo.RollupOlderThanAsync(DateOnly.FromDateTime(DateTime.Now).AddDays(-30));
 
+        // Always create the input source and tracker so the timer drains counters
+        // regardless of whether hooks are running. Hooks are only started if opted in.
         _input = new Win32InputCounterSource();
-        _input.Start();
         _tracker = new ActivityTracker(_repo, new Win32ForegroundWindowSource(), _input,
             IntervalSeconds, idleThresholdSeconds: 60);
 
@@ -47,12 +53,39 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-            var vm = new MainViewModel(_repo);
-            desktop.MainWindow = new MainWindow { DataContext = vm };
-            desktop.MainWindow.Show();
+
+            if (!settings.HasOnboarded)
+            {
+                var onboarding = new OnboardingWindow();
+                onboarding.Closed += (_, _) =>
+                {
+                    var countInput = onboarding.CountInput;
+                    var autostart = onboarding.Autostart;
+                    settingsStore.Save(new AppSettings(true, countInput, autostart));
+                    try { AutostartManager.SetEnabled(autostart, Environment.ProcessPath!); }
+                    catch { /* registry may be unavailable */ }
+                    if (countInput) _input!.Start();
+                    ShowMainWindow(desktop);
+                };
+                desktop.MainWindow = onboarding;
+                onboarding.Show();
+            }
+            else
+            {
+                if (settings.CountInput) _input.Start();
+                ShowMainWindow(desktop);
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void ShowMainWindow(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var vm = new MainViewModel(_repo!);
+        var window = new MainWindow { DataContext = vm };
+        desktop.MainWindow = window;
+        window.Show();
     }
 
     private void OnOpenClicked(object? sender, EventArgs e)
