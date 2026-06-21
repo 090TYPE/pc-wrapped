@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/PcWrapped.Core/PcWrapped.Core.csproj" />
+    <Project Path="src/PcWrapped/PcWrapped.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PcWrapped.Core.Tests/PcWrapped.Core.Tests.csproj" />
