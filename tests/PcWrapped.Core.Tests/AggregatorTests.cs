@@ -48,4 +48,50 @@ public class AggregatorTests
         Assert.Equal(TimeSpan.FromSeconds(50), byCat[Category.Browser]);
         Assert.Equal(TimeSpan.FromSeconds(25), byCat[Category.Other]);
     }
+
+    [Fact]
+    public void HourlySeconds_BucketsByHourOfDay_Length24()
+    {
+        var samples = new[] { S("code", "2026-06-09", 10, 60), S("code", "2026-06-09", 10, 30), S("x", "2026-06-09", 22, 90) };
+        var hourly = Aggregator.HourlySeconds(samples);
+        Assert.Equal(24, hourly.Count);
+        Assert.Equal(90, hourly[10]);
+        Assert.Equal(90, hourly[22]);
+        Assert.Equal(0, hourly[0]);
+    }
+
+    [Fact]
+    public void PeakHour_ReturnsHourWithMostSeconds()
+    {
+        var samples = new[] { S("code", "2026-06-09", 10, 60), S("x", "2026-06-09", 22, 200) };
+        Assert.Equal(22, Aggregator.PeakHour(samples));
+    }
+
+    [Fact]
+    public void PeakHour_NoData_ReturnsMinusOne()
+    {
+        Assert.Equal(-1, Aggregator.PeakHour(Array.Empty<UsageSample>()));
+    }
+
+    [Fact]
+    public void Streak_CountsConsecutiveDaysEndingToday()
+    {
+        var today = new DateOnly(2026, 6, 15);
+        var activeDays = new[]
+        {
+            new DateOnly(2026, 6, 15),
+            new DateOnly(2026, 6, 14),
+            new DateOnly(2026, 6, 13),
+            new DateOnly(2026, 6, 11), // gap on the 12th
+        };
+        Assert.Equal(3, Aggregator.Streak(activeDays, today));
+    }
+
+    [Fact]
+    public void Streak_NoActivityToday_IsZero()
+    {
+        var today = new DateOnly(2026, 6, 15);
+        var activeDays = new[] { new DateOnly(2026, 6, 14) };
+        Assert.Equal(0, Aggregator.Streak(activeDays, today));
+    }
 }

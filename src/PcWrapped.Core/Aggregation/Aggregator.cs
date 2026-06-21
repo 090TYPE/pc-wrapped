@@ -28,4 +28,35 @@ public static class Aggregator
         }
         return result;
     }
+
+    public static IReadOnlyList<int> HourlySeconds(IEnumerable<UsageSample> samples)
+    {
+        var buckets = new int[24];
+        foreach (var s in samples)
+            buckets[s.Start.Hour] += s.DurationSeconds;
+        return buckets;
+    }
+
+    public static int PeakHour(IEnumerable<UsageSample> samples)
+    {
+        var hourly = HourlySeconds(samples);
+        if (hourly.All(v => v == 0)) return -1;
+        int best = 0;
+        for (int h = 1; h < 24; h++)
+            if (hourly[h] > hourly[best]) best = h;
+        return best;
+    }
+
+    public static int Streak(IEnumerable<DateOnly> activeDays, DateOnly today)
+    {
+        var set = activeDays.ToHashSet();
+        int streak = 0;
+        var day = today;
+        while (set.Contains(day))
+        {
+            streak++;
+            day = day.AddDays(-1);
+        }
+        return streak;
+    }
 }
