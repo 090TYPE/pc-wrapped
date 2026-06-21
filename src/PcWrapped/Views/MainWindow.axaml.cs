@@ -47,7 +47,7 @@ public partial class MainWindow : Window
         var sizeBox = this.FindControl<ComboBox>("SizeBox")!;
         if (sizeBox.SelectedItem is SizeOption s) Vm.SelectedSize = s.Size;
 
-        _current = await Vm.BuildWeekStatsAsync(DateOnly.FromDateTime(DateTime.Now), mouseDpi: 96);
+        _current = await Vm.BuildStatsAsync(DateOnly.FromDateTime(DateTime.Now), mouseDpi: 96);
         var panel = this.FindControl<StackPanel>("StatsPanel")!;
         panel.Children.Clear();
         void Add(string s) => panel.Children.Add(new TextBlock { Text = s, FontSize = 18 });
