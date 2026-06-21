@@ -57,4 +57,25 @@ public class SqliteStatsRepositoryTests
         Assert.Contains(new DateOnly(2026, 6, 9), days);
         Assert.Contains(new DateOnly(2026, 6, 10), days);
     }
+
+    [Fact]
+    public async Task RollupOlderThan_CollapsesSamplesPerProcessPerHour()
+    {
+        var repo = await NewRepoAsync();
+        var old = new DateTimeOffset(2026, 1, 1, 10, 5, 0, TimeSpan.Zero);
+        await repo.AddSampleAsync(new UsageSample(old, "code", "a", 60));
+        await repo.AddSampleAsync(new UsageSample(old.AddMinutes(10), "code", "b", 120));
+        await repo.AddSampleAsync(new UsageSample(old.AddMinutes(20), "chrome", "c", 30));
+
+        await repo.RollupOlderThanAsync(new DateOnly(2026, 1, 2));
+
+        var all = await repo.GetSamplesAsync(
+            new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 1, 2, 0, 0, 0, TimeSpan.Zero));
+        Assert.Equal(2, all.Count); // code (180s) + chrome (30s), collapsed to the hour
+        var code = all.First(s => s.ProcessName == "code");
+        Assert.Equal(180, code.DurationSeconds);
+        Assert.Equal(10, code.Start.Hour); // bucketed to start of hour
+        Assert.Equal(0, code.Start.Minute);
+    }
 }

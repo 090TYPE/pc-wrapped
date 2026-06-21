@@ -30,6 +30,7 @@ public partial class App : Application
         Directory.CreateDirectory(dir);
         _repo = new SqliteStatsRepository($"Data Source={Path.Combine(dir, "stats.db")}");
         await _repo.InitializeAsync();
+        await _repo.RollupOlderThanAsync(DateOnly.FromDateTime(DateTime.Now).AddDays(-30));
 
         _input = new Win32InputCounterSource();
         _input.Start();

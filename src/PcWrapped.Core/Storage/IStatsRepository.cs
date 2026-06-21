@@ -10,4 +10,5 @@ public interface IStatsRepository
     Task AddInputCountersAsync(DateOnly day, InputCounters delta);
     Task<InputCounters> GetInputCountersAsync(DateOnly fromInclusive, DateOnly toInclusive);
     Task<IReadOnlyList<DateOnly>> GetActiveDaysAsync();
+    Task RollupOlderThanAsync(DateOnly cutoffDay);
 }

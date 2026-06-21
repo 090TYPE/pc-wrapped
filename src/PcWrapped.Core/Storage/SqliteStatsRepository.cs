@@ -109,5 +109,45 @@ ON CONFLICT(day) DO UPDATE SET
         return days;
     }
 
+    public async Task RollupOlderThanAsync(DateOnly cutoffDay)
+    {
+        long cutoff = new DateTimeOffset(
+            cutoffDay.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero).ToUnixTimeSeconds();
+
+        await using var tx = (Microsoft.Data.Sqlite.SqliteTransaction)
+            await _conn.BeginTransactionAsync();
+
+        // Bucket each old sample to the start of its hour, sum seconds per (process, hour).
+        await using (var agg = _conn.CreateCommand())
+        {
+            agg.Transaction = tx;
+            agg.CommandText = @"
+CREATE TEMP TABLE _rollup AS
+SELECT (start_unix / 3600) * 3600 AS hour_unix, process,
+       MIN(title) AS title, SUM(seconds) AS seconds
+FROM samples WHERE start_unix < $cutoff
+GROUP BY hour_unix, process;";
+            agg.Parameters.AddWithValue("$cutoff", cutoff);
+            await agg.ExecuteNonQueryAsync();
+        }
+        await using (var del = _conn.CreateCommand())
+        {
+            del.Transaction = tx;
+            del.CommandText = "DELETE FROM samples WHERE start_unix < $cutoff;";
+            del.Parameters.AddWithValue("$cutoff", cutoff);
+            await del.ExecuteNonQueryAsync();
+        }
+        await using (var ins = _conn.CreateCommand())
+        {
+            ins.Transaction = tx;
+            ins.CommandText = @"
+INSERT INTO samples (start_unix, process, title, seconds)
+SELECT hour_unix, process, title, seconds FROM _rollup;
+DROP TABLE _rollup;";
+            await ins.ExecuteNonQueryAsync();
+        }
+        await tx.CommitAsync();
+    }
+
     public void Dispose() => _conn.Dispose();
 }
