@@ -40,5 +40,8 @@ public sealed class ActivityTracker
 
         await _repo.AddSampleAsync(new Models.UsageSample(
             now, fg.Value.ProcessName, fg.Value.WindowTitle, _intervalSeconds));
+
+        if (!string.IsNullOrEmpty(fg.Value.ExecutablePath))
+            await _repo.UpsertAppPathAsync(fg.Value.ProcessName, fg.Value.ExecutablePath!);
     }
 }

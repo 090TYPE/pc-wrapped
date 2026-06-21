@@ -79,4 +79,30 @@ public class ActivityTrackerTests
         Assert.Equal(2, counters.Clicks);
         Assert.Equal(40, counters.MousePixels);
     }
+
+    [Fact]
+    public async Task Tick_WithExecutablePath_UpsertsAppPath()
+    {
+        var repo = await NewRepoAsync();
+        var fg = new FakeForeground { Current = new ForegroundInfo("code", "x", @"C:\a\code.exe"), Idle = 0 };
+        var tracker = new ActivityTracker(repo, fg, new FakeInput(), 2, 60);
+
+        await tracker.TickAsync(new DateTimeOffset(2026, 6, 9, 10, 0, 0, TimeSpan.Zero));
+
+        var map = await repo.GetAppPathsAsync();
+        Assert.Equal(@"C:\a\code.exe", map["code"]);
+    }
+
+    [Fact]
+    public async Task Tick_WithoutExecutablePath_DoesNotUpsert()
+    {
+        var repo = await NewRepoAsync();
+        var fg = new FakeForeground { Current = new ForegroundInfo("code", "x"), Idle = 0 };
+        var tracker = new ActivityTracker(repo, fg, new FakeInput(), 2, 60);
+
+        await tracker.TickAsync(new DateTimeOffset(2026, 6, 9, 10, 0, 0, TimeSpan.Zero));
+
+        var map = await repo.GetAppPathsAsync();
+        Assert.Empty(map);
+    }
 }
