@@ -59,4 +59,30 @@ public static class Aggregator
         }
         return streak;
     }
+
+    public static PeriodStats BuildPeriodStats(
+        DateOnly from,
+        DateOnly to,
+        IEnumerable<UsageSample> samples,
+        Categorizer categorizer,
+        InputCounters counters,
+        IEnumerable<DateOnly> activeDays,
+        DateOnly today,
+        int topAppLimit,
+        double mouseDpi)
+    {
+        var list = samples as IReadOnlyList<UsageSample> ?? samples.ToList();
+        return new PeriodStats(
+            From: from,
+            To: to,
+            TotalActive: TotalActive(list),
+            TopApps: TopApps(list, topAppLimit),
+            ByCategory: ByCategory(list, categorizer),
+            PeakHour: PeakHour(list),
+            HourlySeconds: HourlySeconds(list),
+            StreakDays: Streak(activeDays, today),
+            Keystrokes: counters.Keystrokes,
+            Clicks: counters.Clicks,
+            MouseKilometers: VanityMath.PixelsToKilometers(counters.MousePixels, mouseDpi));
+    }
 }

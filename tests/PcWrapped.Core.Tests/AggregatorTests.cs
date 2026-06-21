@@ -94,4 +94,35 @@ public class AggregatorTests
         var activeDays = new[] { new DateOnly(2026, 6, 14) };
         Assert.Equal(0, Aggregator.Streak(activeDays, today));
     }
+
+    [Fact]
+    public void BuildPeriodStats_ComposesAllMetrics()
+    {
+        var cat = new Categorizer(DefaultRules.Map);
+        var samples = new[]
+        {
+            S("code", "2026-06-09", 10, 300),
+            S("chrome", "2026-06-09", 22, 100),
+        };
+        var stats = Aggregator.BuildPeriodStats(
+            from: new DateOnly(2026, 6, 9),
+            to: new DateOnly(2026, 6, 9),
+            samples: samples,
+            categorizer: cat,
+            counters: new InputCounters(1000, 200, 96 * 1000),
+            activeDays: new[] { new DateOnly(2026, 6, 9) },
+            today: new DateOnly(2026, 6, 9),
+            topAppLimit: 5,
+            mouseDpi: 96);
+
+        Assert.Equal(TimeSpan.FromSeconds(400), stats.TotalActive);
+        Assert.Equal("code", stats.TopApps[0].ProcessName);
+        Assert.Equal(10, stats.PeakHour);
+        Assert.Equal(1, stats.StreakDays);
+        Assert.Equal(1000, stats.Keystrokes);
+        Assert.Equal(200, stats.Clicks);
+        // 96*1000 px @ 96 dpi = 1000 inch = 25.4 m = 0.0254 km
+        Assert.Equal(0.0254, stats.MouseKilometers, 6);
+        Assert.Equal(TimeSpan.FromSeconds(300), stats.ByCategory[Category.Work]);
+    }
 }
