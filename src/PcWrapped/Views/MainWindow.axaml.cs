@@ -11,6 +11,8 @@ namespace PcWrapped.Views;
 
 public partial class MainWindow : Window
 {
+    private record SizeOption(string Label, Avalonia.PixelSize Size);
+
     private PeriodStats? _current;
 
     public MainWindow()
@@ -20,6 +22,15 @@ public partial class MainWindow : Window
         box.ItemsSource = CardThemes.All;
         box.SelectedIndex = 0;
         box.DisplayMemberBinding = new Avalonia.Data.Binding("DisplayName");
+
+        var sizeBox = this.FindControl<ComboBox>("SizeBox")!;
+        sizeBox.ItemsSource = new[]
+        {
+            new SizeOption("Квадрат 1:1", CardRenderer.Square),
+            new SizeOption("Сторис 9:16", CardRenderer.Story),
+        };
+        sizeBox.SelectedIndex = 0;
+        sizeBox.DisplayMemberBinding = new Avalonia.Data.Binding("Label");
 
         this.FindControl<Button>("RefreshBtn")!.Click += async (_, _) => await RefreshAsync();
         this.FindControl<Button>("ExportBtn")!.Click += OnExport;
@@ -32,6 +43,9 @@ public partial class MainWindow : Window
     {
         var box = this.FindControl<ComboBox>("ThemeBox")!;
         if (box.SelectedItem is CardTheme t) Vm.SelectedTheme = t;
+
+        var sizeBox = this.FindControl<ComboBox>("SizeBox")!;
+        if (sizeBox.SelectedItem is SizeOption s) Vm.SelectedSize = s.Size;
 
         _current = await Vm.BuildWeekStatsAsync(DateOnly.FromDateTime(DateTime.Now), mouseDpi: 96);
         var panel = this.FindControl<StackPanel>("StatsPanel")!;
@@ -53,9 +67,13 @@ public partial class MainWindow : Window
         var box = this.FindControl<ComboBox>("ThemeBox")!;
         if (box.SelectedItem is CardTheme t) Vm.SelectedTheme = t;
 
+        var sizeBox = this.FindControl<ComboBox>("SizeBox")!;
+        if (sizeBox.SelectedItem is SizeOption s) Vm.SelectedSize = s.Size;
+
+        var suffix = Vm.SelectedSize == CardRenderer.Story ? "story" : "square";
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            SuggestedFileName = "pc-wrapped.png",
+            SuggestedFileName = $"pc-wrapped-{suffix}.png",
             DefaultExtension = "png",
         });
         if (file is null) return;

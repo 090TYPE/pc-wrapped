@@ -8,6 +8,7 @@
                Text="Собираю статистику…" Opacity="0.7"/>
     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="12" Margin="0,16,0,0">
       <ComboBox x:Name="ThemeBox" Width="200"/>
+      <ComboBox x:Name="SizeBox" Width="160"/>
       <Button x:Name="RefreshBtn" Content="Обновить"/>
       <Button x:Name="ExportBtn" Content="Сохранить карточку (PNG)"/>
     </StackPanel>

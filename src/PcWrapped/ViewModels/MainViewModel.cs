@@ -14,6 +14,7 @@ public sealed class MainViewModel
     private readonly Categorizer _categorizer = new(DefaultRules.Map);
 
     public CardTheme SelectedTheme { get; set; } = CardThemes.Gradient;
+    public Avalonia.PixelSize SelectedSize { get; set; } = CardRenderer.Square;
 
     public MainViewModel(IStatsRepository repo) => _repo = repo;
 
@@ -32,5 +33,5 @@ public sealed class MainViewModel
     }
 
     public Task ExportAsync(PeriodStats stats, string path) =>
-        Task.Run(() => CardRenderer.RenderToPng(stats, SelectedTheme, CardRenderer.Square, path));
+        Task.Run(() => CardRenderer.RenderToPng(stats, SelectedTheme, SelectedSize, path));
 }
