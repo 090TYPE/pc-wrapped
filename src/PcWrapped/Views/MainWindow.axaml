@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PcWrapped.Views.MainWindow"
+        Width="520" Height="640" Title="PC Wrapped">
+  <DockPanel Margin="24">
+    <TextBlock DockPanel.Dock="Top" Text="PC Wrapped" FontSize="28" FontWeight="Bold"/>
+    <TextBlock DockPanel.Dock="Top" x:Name="Status" Margin="0,8,0,16"
+               Text="Собираю статистику…" Opacity="0.7"/>
+    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="12" Margin="0,16,0,0">
+      <ComboBox x:Name="ThemeBox" Width="200"/>
+      <Button x:Name="RefreshBtn" Content="Обновить"/>
+      <Button x:Name="ExportBtn" Content="Сохранить карточку (PNG)"/>
+    </StackPanel>
+    <ScrollViewer>
+      <StackPanel x:Name="StatsPanel" Spacing="6"/>
+    </ScrollViewer>
+  </DockPanel>
+</Window>
