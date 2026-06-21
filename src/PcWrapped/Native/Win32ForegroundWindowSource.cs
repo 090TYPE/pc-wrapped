@@ -25,12 +25,18 @@ public sealed class Win32ForegroundWindowSource : IForegroundWindowSource
         if (pid == 0) return null;
 
         string process;
-        try { process = Process.GetProcessById((int)pid).ProcessName; }
+        string? path = null;
+        try
+        {
+            var proc = Process.GetProcessById((int)pid);
+            process = proc.ProcessName;
+            try { path = proc.MainModule?.FileName; } catch { path = null; }
+        }
         catch { return null; }
 
         var sb = new StringBuilder(512);
         GetWindowText(hwnd, sb, sb.Capacity);
-        return new ForegroundInfo(process, sb.ToString());
+        return new ForegroundInfo(process, sb.ToString(), path);
     }
 
     public int GetIdleSeconds()
