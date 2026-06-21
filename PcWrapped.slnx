@@ -4,6 +4,7 @@
     <Project Path="src/PcWrapped/PcWrapped.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/PcWrapped.App.Tests/PcWrapped.App.Tests.csproj" />
     <Project Path="tests/PcWrapped.Core.Tests/PcWrapped.Core.Tests.csproj" />
   </Folder>
 </Solution>
