@@ -78,4 +78,28 @@ public class SqliteStatsRepositoryTests
         Assert.Equal(10, code.Start.Hour); // bucketed to start of hour
         Assert.Equal(0, code.Start.Minute);
     }
+
+    [Fact]
+    public async Task AppPaths_UpsertAndGet_RoundTrips()
+    {
+        var repo = await NewRepoAsync();
+        await repo.UpsertAppPathAsync("code", @"C:\apps\code.exe");
+        await repo.UpsertAppPathAsync("chrome", @"C:\apps\chrome.exe");
+
+        var map = await repo.GetAppPathsAsync();
+        Assert.Equal(@"C:\apps\code.exe", map["code"]);
+        Assert.Equal(@"C:\apps\chrome.exe", map["chrome"]);
+    }
+
+    [Fact]
+    public async Task AppPaths_Upsert_UpdatesExistingPath()
+    {
+        var repo = await NewRepoAsync();
+        await repo.UpsertAppPathAsync("code", @"C:\old\code.exe");
+        await repo.UpsertAppPathAsync("code", @"C:\new\code.exe");
+
+        var map = await repo.GetAppPathsAsync();
+        Assert.Single(map);
+        Assert.Equal(@"C:\new\code.exe", map["code"]);
+    }
 }

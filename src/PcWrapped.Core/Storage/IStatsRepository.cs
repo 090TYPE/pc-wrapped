@@ -11,4 +11,6 @@ public interface IStatsRepository
     Task<InputCounters> GetInputCountersAsync(DateOnly fromInclusive, DateOnly toInclusive);
     Task<IReadOnlyList<DateOnly>> GetActiveDaysAsync();
     Task RollupOlderThanAsync(DateOnly cutoffDay);
+    Task UpsertAppPathAsync(string process, string path);
+    Task<IReadOnlyDictionary<string, string>> GetAppPathsAsync();
 }

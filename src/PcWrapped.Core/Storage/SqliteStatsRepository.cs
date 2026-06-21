@@ -28,6 +28,10 @@ CREATE TABLE IF NOT EXISTS input_counters (
     keystrokes INTEGER NOT NULL,
     clicks     INTEGER NOT NULL,
     pixels     REAL    NOT NULL
+);
+CREATE TABLE IF NOT EXISTS app_paths (
+    process TEXT PRIMARY KEY,
+    path    TEXT NOT NULL
 );";
         await using var cmd = _conn.CreateCommand();
         cmd.CommandText = sql;
@@ -147,6 +151,28 @@ DROP TABLE _rollup;";
             await ins.ExecuteNonQueryAsync();
         }
         await tx.CommitAsync();
+    }
+
+    public async Task UpsertAppPathAsync(string process, string path)
+    {
+        await using var cmd = _conn.CreateCommand();
+        cmd.CommandText =
+            "INSERT INTO app_paths (process, path) VALUES ($p, $path) " +
+            "ON CONFLICT(process) DO UPDATE SET path = $path;";
+        cmd.Parameters.AddWithValue("$p", process);
+        cmd.Parameters.AddWithValue("$path", path);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<IReadOnlyDictionary<string, string>> GetAppPathsAsync()
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        await using var cmd = _conn.CreateCommand();
+        cmd.CommandText = "SELECT process, path FROM app_paths";
+        await using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync())
+            map[r.GetString(0)] = r.GetString(1);
+        return map;
     }
 
     public void Dispose() => _conn.Dispose();

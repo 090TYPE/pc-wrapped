@@ -1,6 +1,6 @@
 namespace PcWrapped.Core.Tracking;
 
-public readonly record struct ForegroundInfo(string ProcessName, string WindowTitle);
+public readonly record struct ForegroundInfo(string ProcessName, string WindowTitle, string? ExecutablePath = null);
 
 public interface IForegroundWindowSource
 {
