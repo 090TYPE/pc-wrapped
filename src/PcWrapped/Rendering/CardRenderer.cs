@@ -66,11 +66,14 @@ public static class CardRenderer
             FontFamily = theme.FontFamily, FontSize = 110, FontWeight = FontWeight.Black,
         });
 
-        if (stats.TopApps.Count > 0)
+        int shown = 0;
+        foreach (var app in stats.TopApps)
         {
-            IImage? icon = null;
-            appIcons?.TryGetValue(stats.TopApps[0].ProcessName, out icon);
-            Row(stats.TopApps[0].ProcessName, FormatHours(stats.TopApps[0].Duration), icon);
+            if (shown >= 5) break;
+            IImage? appIcon = null;
+            appIcons?.TryGetValue(app.ProcessName, out appIcon);
+            Row(app.ProcessName, FormatHours(app.Duration), appIcon);
+            shown++;
         }
         Row("🖱️ Мышь проехала", $"{stats.MouseKilometers:0.0} км");
         Row("⌨️ Нажатий", $"{stats.Keystrokes:N0}");

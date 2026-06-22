@@ -41,7 +41,7 @@ public partial class App : Application
         // regardless of whether hooks are running. Hooks are only started if opted in.
         _input = new Win32InputCounterSource();
         _tracker = new ActivityTracker(_repo, new Win32ForegroundWindowSource(), _input,
-            IntervalSeconds, idleThresholdSeconds: 60);
+            IntervalSeconds, idleThresholdSeconds: 180);
 
         _timer = new Timer(IntervalSeconds * 1000);
         _timer.Elapsed += async (_, _) =>
