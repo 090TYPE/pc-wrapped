@@ -18,7 +18,7 @@ public sealed class Categorizer
         return _rules.TryGetValue(Normalize(processName), out var cat) ? cat : Category.Other;
     }
 
-    private static string Normalize(string name)
+    public static string Normalize(string name)
     {
         name = name.Trim();
         if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))

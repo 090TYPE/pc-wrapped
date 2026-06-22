@@ -39,6 +39,9 @@ public class CategorizerTests
         var c = new Categorizer(DefaultRules.Map);
         Assert.Equal(Category.Browser, c.Categorize("chrome"));
         Assert.Equal(Category.Work, c.Categorize("code"));
+        Assert.Equal(Category.Work, c.Categorize("pycharm64"));
         Assert.Equal(Category.Social, c.Categorize("discord"));
+        Assert.Equal(Category.Games, c.Categorize("steam"));
+        Assert.Equal(Category.Other, c.Categorize("spotify"));
     }
 }
