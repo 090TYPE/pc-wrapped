@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -6,6 +8,8 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using PcWrapped.Controls;
+using PcWrapped.Core.Aggregation;
 using PcWrapped.Core.Models;
 using PcWrapped.Rendering;
 using PcWrapped.ViewModels;
@@ -91,8 +95,39 @@ public partial class MainWindow : Window
         this.FindControl<TextBlock>("StreakText")!.Text = $"{_current.StreakDays} дн.";
         this.FindControl<ItemsControl>("AppList")!.ItemsSource = AppRowVm.FromStats(_current, paths);
 
+        UpdateCharts();
         RenderPreview();
         this.FindControl<TextBlock>("Status")!.Text = "Готово";
+    }
+
+    private void UpdateCharts()
+    {
+        if (_current is null) return;
+
+        var slices = ChartData.Segments(_current.ByCategory);
+        this.FindControl<CategoryDonut>("Donut")!.Segments =
+            slices.Select(s => new DonutSegment(s.Fraction, CategoryPalette.Of(s.Category))).ToList();
+
+        var legend = this.FindControl<StackPanel>("DonutLegend")!;
+        legend.Children.Clear();
+        foreach (var s in slices)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+            row.Children.Add(new Border
+            {
+                Width = 10, Height = 10, CornerRadius = new Avalonia.CornerRadius(3),
+                Background = new SolidColorBrush(CategoryPalette.Of(s.Category)),
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            row.Children.Add(new TextBlock
+            {
+                Text = $"{CategoryPalette.Name(s.Category)} {s.Fraction:P0}",
+                FontSize = 11, VerticalAlignment = VerticalAlignment.Center,
+            });
+            legend.Children.Add(row);
+        }
+
+        this.FindControl<HourlyBars>("Bars")!.Values = ChartData.NormalizeHours(_current.HourlySeconds);
     }
 
     private System.Collections.Generic.Dictionary<string, Avalonia.Media.IImage> CurrentIcons()

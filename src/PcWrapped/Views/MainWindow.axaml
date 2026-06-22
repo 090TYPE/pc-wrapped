@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="clr-namespace:PcWrapped.Converters"
         xmlns:vm="clr-namespace:PcWrapped.ViewModels"
+        xmlns:ctl="clr-namespace:PcWrapped.Controls"
         x:Class="PcWrapped.Views.MainWindow"
         Width="900" Height="620" MinWidth="760" MinHeight="520"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
@@ -31,7 +32,7 @@
     </Border>
 
     <!-- CENTER -->
-    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" Margin="20,16">
+    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,Auto,*" Margin="20,16">
       <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
         <StackPanel>
           <TextBlock x:Name="PeriodLabel" Classes="lab" Text="ТВОЯ НЕДЕЛЯ ЗА ПК"/>
@@ -44,9 +45,27 @@
         </StackPanel>
       </Grid>
 
-      <TextBlock Grid.Row="1" Classes="lab" Text="ТОП ПРИЛОЖЕНИЙ" Margin="0,14,0,6"/>
+      <Grid Grid.Row="1" ColumnDefinitions="Auto,*" Margin="0,16,0,0">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+          <ctl:CategoryDonut x:Name="Donut" Width="104" Height="104"/>
+          <StackPanel x:Name="DonutLegend" VerticalAlignment="Center" Spacing="3"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Margin="24,0,0,0" VerticalAlignment="Center">
+          <TextBlock Classes="lab" Text="АКТИВНОСТЬ ПО ЧАСАМ"/>
+          <ctl:HourlyBars x:Name="Bars" Height="64" Margin="0,6,0,2"/>
+          <Grid ColumnDefinitions="*,*,*,*,*">
+            <TextBlock Classes="lab" Text="0"/>
+            <TextBlock Grid.Column="1" Classes="lab" Text="6" HorizontalAlignment="Center"/>
+            <TextBlock Grid.Column="2" Classes="lab" Text="12" HorizontalAlignment="Center"/>
+            <TextBlock Grid.Column="3" Classes="lab" Text="18" HorizontalAlignment="Center"/>
+            <TextBlock Grid.Column="4" Classes="lab" Text="23" HorizontalAlignment="Right"/>
+          </Grid>
+        </StackPanel>
+      </Grid>
 
-      <ScrollViewer Grid.Row="2">
+      <TextBlock Grid.Row="2" Classes="lab" Text="ТОП ПРИЛОЖЕНИЙ" Margin="0,16,0,6"/>
+
+      <ScrollViewer Grid.Row="3">
         <ItemsControl x:Name="AppList">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
