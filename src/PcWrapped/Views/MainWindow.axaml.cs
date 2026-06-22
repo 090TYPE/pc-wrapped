@@ -15,6 +15,7 @@ namespace PcWrapped.Views;
 public partial class MainWindow : Window
 {
     private PeriodStats? _current;
+    private System.Collections.Generic.IReadOnlyDictionary<string, string>? _currentPaths;
 
     public MainWindow()
     {
@@ -82,6 +83,7 @@ public partial class MainWindow : Window
 
         _current = await Vm.BuildStatsAsync(DateOnly.FromDateTime(DateTime.Now), mouseDpi: 96);
         var paths = await Vm.GetAppPathsAsync();
+        _currentPaths = paths;
 
         this.FindControl<TextBlock>("PeriodLabel")!.Text = PeriodLabelText(Vm.SelectedPeriod);
         this.FindControl<TextBlock>("TotalText")!.Text =
@@ -93,10 +95,25 @@ public partial class MainWindow : Window
         this.FindControl<TextBlock>("Status")!.Text = "Готово";
     }
 
+    private System.Collections.Generic.Dictionary<string, Avalonia.Media.IImage> CurrentIcons()
+    {
+        var map = new System.Collections.Generic.Dictionary<string, Avalonia.Media.IImage>();
+        if (_current is null) return map;
+        var paths = _currentPaths;
+        if (paths is null) return map;
+        foreach (var app in _current.TopApps)
+            if (paths.TryGetValue(app.ProcessName, out var p))
+            {
+                var img = PcWrapped.Native.AppIconProvider.GetIcon(p);
+                if (img is not null) map[app.ProcessName] = img;
+            }
+        return map;
+    }
+
     private void RenderPreview()
     {
         if (_current is null) return;
-        var bmp = CardRenderer.RenderToBitmap(_current, Vm.SelectedTheme, Vm.SelectedSize);
+        var bmp = CardRenderer.RenderToBitmap(_current, Vm.SelectedTheme, Vm.SelectedSize, CurrentIcons());
         this.FindControl<Image>("PreviewImage")!.Source = bmp;
     }
 
@@ -110,6 +127,6 @@ public partial class MainWindow : Window
             DefaultExtension = "png",
         });
         if (file is null) return;
-        await Vm.ExportAsync(_current, file.Path.LocalPath);
+        await Vm.ExportAsync(_current, file.Path.LocalPath, CurrentIcons());
     }
 }

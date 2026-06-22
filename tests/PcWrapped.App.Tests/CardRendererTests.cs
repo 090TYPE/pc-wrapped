@@ -47,4 +47,19 @@ public class CardRendererTests
             Assert.Equal((byte)'P', sig[1]);
         }
     }
+
+    [AvaloniaFact]
+    public void RenderToPng_WithIcons_DoesNotThrow()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pcwrapped-test");
+        Directory.CreateDirectory(dir);
+        var icon = new Avalonia.Media.Imaging.RenderTargetBitmap(new Avalonia.PixelSize(16, 16));
+        var icons = new Dictionary<string, Avalonia.Media.IImage> { ["code"] = icon };
+
+        var path = Path.Combine(dir, "with-icons.png");
+        CardRenderer.RenderToPng(Sample(), CardThemes.Gradient, CardRenderer.Square, path, icons);
+
+        Assert.True(File.Exists(path));
+        Assert.True(new FileInfo(path).Length > 1000);
+    }
 }
