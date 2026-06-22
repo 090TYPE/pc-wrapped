@@ -48,6 +48,37 @@ public class CardRendererTests
         }
     }
 
+    private static PeriodStats SampleWithCharts()
+    {
+        var hourly = new int[24];
+        hourly[10] = 40; hourly[14] = 90; hourly[22] = 60;
+        return new PeriodStats(
+            new DateOnly(2026, 6, 9), new DateOnly(2026, 6, 15),
+            TimeSpan.FromHours(37),
+            new[] { new AppUsage("code", TimeSpan.FromHours(14)), new AppUsage("chrome", TimeSpan.FromHours(8)) },
+            new Dictionary<Category, TimeSpan>
+            {
+                [Category.Work] = TimeSpan.FromHours(20),
+                [Category.Browser] = TimeSpan.FromHours(10),
+                [Category.Games] = TimeSpan.FromHours(7),
+            },
+            14, hourly, 5, 91204, 4200, 3.4);
+    }
+
+    [AvaloniaFact]
+    public void RenderToPng_WithCharts_ProducesValidPng()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pcwrapped-test");
+        Directory.CreateDirectory(dir);
+        foreach (var theme in CardThemes.All)
+        {
+            var path = Path.Combine(dir, $"charts-{theme.Id}.png");
+            CardRenderer.RenderToPng(SampleWithCharts(), theme, CardRenderer.Square, path);
+            Assert.True(File.Exists(path));
+            Assert.True(new FileInfo(path).Length > 1000);
+        }
+    }
+
     [AvaloniaFact]
     public void RenderToPng_WithIcons_DoesNotThrow()
     {

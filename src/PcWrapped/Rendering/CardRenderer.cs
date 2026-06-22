@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using PcWrapped.Controls;
+using PcWrapped.Core.Aggregation;
 using PcWrapped.Core.Models;
 
 namespace PcWrapped.Rendering;
@@ -69,12 +72,59 @@ public static class CardRenderer
         int shown = 0;
         foreach (var app in stats.TopApps)
         {
-            if (shown >= 5) break;
+            if (shown >= 3) break;
             IImage? appIcon = null;
             appIcons?.TryGetValue(app.ProcessName, out appIcon);
             Row(app.ProcessName, FormatHours(app.Duration), appIcon);
             shown++;
         }
+        // ---- charts band (category donut + hourly bars), theme-shaded ----
+        var slices = ChartData.Segments(stats.ByCategory);
+        var shades = new[] { 1.0, 0.72, 0.5, 0.36, 0.25 };
+        Color Shade(int i) => WithOpacity(theme.TextColor, shades[Math.Min(i, shades.Length - 1)]);
+
+        if (slices.Count > 0)
+        {
+            var band = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 28 };
+            band.Children.Add(new CategoryDonut
+            {
+                Width = 150, Height = 150, Thickness = 24,
+                EmptyBrush = new SolidColorBrush(WithOpacity(theme.TextColor, 0.15)),
+                Segments = slices.Select((s, i) => new DonutSegment(s.Fraction, Shade(i))).ToList(),
+            });
+            var legend = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 8 };
+            for (int i = 0; i < slices.Count && i < 3; i++)
+            {
+                var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+                row.Children.Add(new Border
+                {
+                    Width = 26, Height = 26, CornerRadius = new Avalonia.CornerRadius(6),
+                    Background = new SolidColorBrush(Shade(i)),
+                    VerticalAlignment = VerticalAlignment.Center,
+                });
+                row.Children.Add(new TextBlock
+                {
+                    Text = $"{CategoryPalette.Name(slices[i].Category)} {slices[i].Fraction:P0}",
+                    Foreground = new SolidColorBrush(theme.TextColor), FontFamily = theme.FontFamily,
+                    FontSize = 30, VerticalAlignment = VerticalAlignment.Center,
+                });
+                legend.Children.Add(row);
+            }
+            band.Children.Add(legend);
+            stack.Children.Add(band);
+        }
+
+        var hours = ChartData.NormalizeHours(stats.HourlySeconds);
+        if (hours.Count > 0)
+        {
+            stack.Children.Add(new HourlyBars
+            {
+                Height = 90, Values = hours,
+                Bar = new SolidColorBrush(theme.AccentColor),
+                Track = new SolidColorBrush(WithOpacity(theme.TextColor, 0.12)),
+            });
+        }
+
         Row("🖱️ Мышь проехала", $"{stats.MouseKilometers:0.0} км");
         Row("⌨️ Нажатий", $"{stats.Keystrokes:N0}");
         if (stats.PeakHour >= 0) Row("🔥 Пик", $"{stats.PeakHour:00}:00");
@@ -108,6 +158,9 @@ public static class CardRenderer
         using var bmp = RenderToBitmap(stats, theme, size, appIcons);
         bmp.Save(path);
     }
+
+    private static Color WithOpacity(Color c, double o) =>
+        new Color((byte)(o * 255), c.R, c.G, c.B);
 
     private static string FormatHours(TimeSpan t) =>
         t.TotalHours >= 1 ? $"{(int)t.TotalHours}ч {t.Minutes:00}м" : $"{t.Minutes}м";
