@@ -3,8 +3,8 @@
         x:Class="PcWrapped.Views.OnboardingWindow"
         Width="460" Height="360" Title="Добро пожаловать в PC Wrapped">
   <StackPanel Margin="28" Spacing="14">
-    <TextBlock Text="Приватность прежде всего" FontSize="22" FontWeight="Bold"/>
-    <TextBlock TextWrapping="Wrap"
+    <TextBlock x:Name="PrivacyTitle" Text="Приватность прежде всего" FontSize="22" FontWeight="Bold"/>
+    <TextBlock x:Name="PrivacyBody" TextWrapping="Wrap"
       Text="PC Wrapped считает время в приложениях и количество нажатий/кликов/движений мыши, чтобы строить красивые карточки. Все данные хранятся только на этом компьютере и никогда не отправляются в сеть. Содержимое набранного текста не сохраняется — только счётчики."/>
     <CheckBox x:Name="VanityToggle" IsChecked="True"
       Content="Считать нажатия клавиш и движение мыши"/>

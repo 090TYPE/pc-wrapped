@@ -8,6 +8,9 @@ using PcWrapped.Rendering;
 using Xunit;
 
 [assembly: AvaloniaTestApplication(typeof(PcWrapped.App.Tests.TestAppBuilder))]
+// Tests share the global Loc.Current static; run them sequentially so each test's
+// Loc.Current setup is deterministic and not raced by a parallel test class.
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace PcWrapped.App.Tests;
 

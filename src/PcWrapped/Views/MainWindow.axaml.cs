@@ -11,6 +11,7 @@ using Avalonia.Platform.Storage;
 using PcWrapped.Controls;
 using PcWrapped.Core.Aggregation;
 using PcWrapped.Core.Models;
+using PcWrapped.Localization;
 using PcWrapped.Rendering;
 using PcWrapped.ViewModels;
 
@@ -34,6 +35,14 @@ public partial class MainWindow : Window
         this.FindControl<RadioButton>("SizeSquare")!.IsCheckedChanged += async (_, _) => await RefreshAsync();
         this.FindControl<RadioButton>("SizeStory")!.IsCheckedChanged += async (_, _) => await RefreshAsync();
         this.FindControl<Button>("ExportBtn")!.Click += OnExport;
+
+        var langRu = this.FindControl<RadioButton>("LangRu")!;
+        var langEn = this.FindControl<RadioButton>("LangEn")!;
+        langRu.IsChecked = Loc.Current == AppLanguage.Ru;
+        langEn.IsChecked = Loc.Current == AppLanguage.En;
+        langRu.IsCheckedChanged += async (_, _) => { if (langRu.IsChecked == true) await SetLanguage(AppLanguage.Ru); };
+        langEn.IsCheckedChanged += async (_, _) => { if (langEn.IsChecked == true) await SetLanguage(AppLanguage.En); };
+        ApplyLanguage();
 
         Opened += async (_, _) => await RefreshAsync();
     }
@@ -72,12 +81,29 @@ public partial class MainWindow : Window
         return StatsPeriod.Week;
     }
 
-    private static string PeriodLabelText(StatsPeriod p) => p switch
+    private async System.Threading.Tasks.Task SetLanguage(AppLanguage lang)
     {
-        StatsPeriod.Today => "ТВОЙ ДЕНЬ ЗА ПК",
-        StatsPeriod.Year => "ТВОЙ ГОД ЗА ПК",
-        _ => "ТВОЯ НЕДЕЛЯ ЗА ПК",
-    };
+        if (Loc.Current == lang) return;
+        Loc.Current = lang;
+        PcWrapped.Localization.LanguagePersistence.Save(lang);
+        ApplyLanguage();
+        await RefreshAsync();
+    }
+
+    private void ApplyLanguage()
+    {
+        this.FindControl<RadioButton>("TabToday")!.Content = Loc.T("tab.today");
+        this.FindControl<RadioButton>("TabWeek")!.Content = Loc.T("tab.week");
+        this.FindControl<RadioButton>("TabYear")!.Content = Loc.T("tab.year");
+        this.FindControl<TextBlock>("LblTheme")!.Text = Loc.T("rail.theme");
+        this.FindControl<TextBlock>("LblFormat")!.Text = Loc.T("rail.format");
+        this.FindControl<TextBlock>("LblLanguage")!.Text = Loc.T("rail.language");
+        this.FindControl<TextBlock>("LblStreakCaption")!.Text = Loc.T("rail.streak");
+        this.FindControl<TextBlock>("LblHourly")!.Text = Loc.T("rail.hourly");
+        this.FindControl<TextBlock>("LblTopApps")!.Text = Loc.T("rail.topapps");
+        this.FindControl<TextBlock>("LblPreview")!.Text = Loc.T("rail.preview");
+        this.FindControl<Button>("ExportBtn")!.Content = Loc.T("rail.share");
+    }
 
     private async Task RefreshAsync()
     {
@@ -89,15 +115,19 @@ public partial class MainWindow : Window
         var paths = await Vm.GetAppPathsAsync();
         _currentPaths = paths;
 
-        this.FindControl<TextBlock>("PeriodLabel")!.Text = PeriodLabelText(Vm.SelectedPeriod);
-        this.FindControl<TextBlock>("TotalText")!.Text =
-            $"{(int)_current.TotalActive.TotalHours}ч {_current.TotalActive.Minutes:00}м";
-        this.FindControl<TextBlock>("StreakText")!.Text = $"{_current.StreakDays} дн.";
+        this.FindControl<TextBlock>("PeriodLabel")!.Text = Loc.T(Vm.SelectedPeriod switch
+        {
+            StatsPeriod.Today => "period.day",
+            StatsPeriod.Year => "period.year",
+            _ => "period.week",
+        });
+        this.FindControl<TextBlock>("TotalText")!.Text = Loc.Hours(_current.TotalActive);
+        this.FindControl<TextBlock>("StreakText")!.Text = Loc.Days(_current.StreakDays);
         this.FindControl<ItemsControl>("AppList")!.ItemsSource = AppRowVm.FromStats(_current, paths, Vm.Categorizer);
 
         UpdateCharts();
         RenderPreview();
-        this.FindControl<TextBlock>("Status")!.Text = "Готово";
+        this.FindControl<TextBlock>("Status")!.Text = Loc.T("status.ready");
     }
 
     private void UpdateCharts()
