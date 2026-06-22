@@ -14,6 +14,14 @@ public sealed class Win32ForegroundWindowSource : IForegroundWindowSource
     private static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
     [DllImport("user32.dll")] private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr OpenProcess(int access, bool inherit, uint pid);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr h);
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    private static extern bool QueryFullProcessImageName(IntPtr h, int flags, StringBuilder buf, ref int size);
+    private const int PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+
     [StructLayout(LayoutKind.Sequential)]
     private struct LASTINPUTINFO { public uint cbSize; public uint dwTime; }
 
@@ -25,14 +33,26 @@ public sealed class Win32ForegroundWindowSource : IForegroundWindowSource
         if (pid == 0) return null;
 
         string process;
-        string? path = null;
         try
         {
             var proc = Process.GetProcessById((int)pid);
             process = proc.ProcessName;
-            try { path = proc.MainModule?.FileName; } catch { path = null; }
         }
         catch { return null; }
+
+        string? path = null;
+        var ph = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+        if (ph != IntPtr.Zero)
+        {
+            try
+            {
+                var buf = new StringBuilder(1024);
+                int len = buf.Capacity;
+                if (QueryFullProcessImageName(ph, 0, buf, ref len))
+                    path = buf.ToString();
+            }
+            finally { CloseHandle(ph); }
+        }
 
         var sb = new StringBuilder(512);
         GetWindowText(hwnd, sb, sb.Capacity);
