@@ -46,9 +46,18 @@ public static class CardRenderer
             stack.Children.Add(dock);
         }
 
+        // header text by period span
+        static string Header(PeriodStats s)
+        {
+            int days = (s.To.DayNumber - s.From.DayNumber);
+            if (days <= 0) return "ТВОЙ ДЕНЬ ЗА ПК";
+            if (days <= 31) return "ТВОЯ НЕДЕЛЯ ЗА ПК";
+            return "ТВОЙ ГОД ЗА ПК";
+        }
+
         stack.Children.Add(new TextBlock
         {
-            Text = "ТВОЯ НЕДЕЛЯ ЗА ПК", Foreground = new SolidColorBrush(theme.TextColor),
+            Text = Header(stats), Foreground = new SolidColorBrush(theme.TextColor),
             FontFamily = theme.FontFamily, FontSize = 28, Opacity = 0.8,
         });
         stack.Children.Add(new TextBlock

@@ -45,6 +45,9 @@ public sealed class MainViewModel
     public Task<IReadOnlyDictionary<string, string>> GetAppPathsAsync() => _repo.GetAppPathsAsync();
 
     public Task ExportAsync(PeriodStats stats, string path,
-        IReadOnlyDictionary<string, Avalonia.Media.IImage>? appIcons) =>
-        Task.Run(() => CardRenderer.RenderToPng(stats, SelectedTheme, SelectedSize, path, appIcons));
+        IReadOnlyDictionary<string, Avalonia.Media.IImage>? appIcons)
+    {
+        CardRenderer.RenderToPng(stats, SelectedTheme, SelectedSize, path, appIcons);
+        return Task.CompletedTask;
+    }
 }
