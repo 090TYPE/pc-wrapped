@@ -73,6 +73,15 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:AppRowVm">
               <Border Classes="appTile" Width="332" Height="60" Margin="0,0,10,10" Padding="8">
+                <Border.ContextMenu>
+                  <ContextMenu Opening="OnCategoryMenuOpening">
+                    <MenuItem Header="Работа" Tag="Work" Click="OnAssignCategory"/>
+                    <MenuItem Header="Игры" Tag="Games" Click="OnAssignCategory"/>
+                    <MenuItem Header="Соцсети" Tag="Social" Click="OnAssignCategory"/>
+                    <MenuItem Header="Браузер" Tag="Browser" Click="OnAssignCategory"/>
+                    <MenuItem Header="Прочее" Tag="Other" Click="OnAssignCategory"/>
+                  </ContextMenu>
+                </Border.ContextMenu>
                 <Grid ColumnDefinitions="32,*">
                   <Panel Grid.Column="0" Width="30" Height="30">
                     <Border CornerRadius="7" Background="{StaticResource AccentBrush}">

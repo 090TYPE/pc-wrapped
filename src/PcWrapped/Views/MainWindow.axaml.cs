@@ -152,6 +152,28 @@ public partial class MainWindow : Window
         this.FindControl<Image>("PreviewImage")!.Source = bmp;
     }
 
+    private void OnCategoryMenuOpening(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        // Avalonia 11.0.10 MenuItem has no ToggleType/IsChecked; show the current
+        // category with a check glyph in the MenuItem.Icon instead.
+        if (sender is ContextMenu cm && cm.DataContext is AppRowVm row)
+            foreach (var item in cm.Items.OfType<MenuItem>())
+                item.Icon = item.Tag as string == row.Category.ToString()
+                    ? new TextBlock { Text = "✓" }
+                    : null;
+    }
+
+    private async void OnAssignCategory(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem mi && mi.Tag is string tag
+            && Enum.TryParse<Category>(tag, out var cat)
+            && mi.DataContext is AppRowVm row)
+        {
+            await Vm.AssignCategoryAsync(row.Name, cat);
+            await RefreshAsync();
+        }
+    }
+
     private async void OnExport(object? sender, RoutedEventArgs e)
     {
         if (_current is null) return;
