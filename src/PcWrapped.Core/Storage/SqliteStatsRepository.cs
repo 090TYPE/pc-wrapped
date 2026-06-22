@@ -32,6 +32,10 @@ CREATE TABLE IF NOT EXISTS input_counters (
 CREATE TABLE IF NOT EXISTS app_paths (
     process TEXT PRIMARY KEY,
     path    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS category_overrides (
+    process  TEXT PRIMARY KEY,
+    category TEXT NOT NULL
 );";
         await using var cmd = _conn.CreateCommand();
         cmd.CommandText = sql;
@@ -172,6 +176,29 @@ DROP TABLE _rollup;";
         await using var r = await cmd.ExecuteReaderAsync();
         while (await r.ReadAsync())
             map[r.GetString(0)] = r.GetString(1);
+        return map;
+    }
+
+    public async Task UpsertCategoryOverrideAsync(string process, Category category)
+    {
+        await using var cmd = _conn.CreateCommand();
+        cmd.CommandText =
+            "INSERT INTO category_overrides (process, category) VALUES ($p, $c) " +
+            "ON CONFLICT(process) DO UPDATE SET category = $c;";
+        cmd.Parameters.AddWithValue("$p", process);
+        cmd.Parameters.AddWithValue("$c", category.ToString());
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<IReadOnlyDictionary<string, Category>> GetCategoryOverridesAsync()
+    {
+        var map = new Dictionary<string, Category>(StringComparer.OrdinalIgnoreCase);
+        await using var cmd = _conn.CreateCommand();
+        cmd.CommandText = "SELECT process, category FROM category_overrides";
+        await using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync())
+            if (Enum.TryParse<Category>(r.GetString(1), out var cat)) // skip unknown values safely
+                map[r.GetString(0)] = cat;
         return map;
     }
 

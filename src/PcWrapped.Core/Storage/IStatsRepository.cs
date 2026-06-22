@@ -13,4 +13,6 @@ public interface IStatsRepository
     Task RollupOlderThanAsync(DateOnly cutoffDay);
     Task UpsertAppPathAsync(string process, string path);
     Task<IReadOnlyDictionary<string, string>> GetAppPathsAsync();
+    Task UpsertCategoryOverrideAsync(string process, Category category);
+    Task<IReadOnlyDictionary<string, Category>> GetCategoryOverridesAsync();
 }

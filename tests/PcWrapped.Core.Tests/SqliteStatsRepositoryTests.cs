@@ -102,4 +102,28 @@ public class SqliteStatsRepositoryTests
         Assert.Single(map);
         Assert.Equal(@"C:\new\code.exe", map["code"]);
     }
+
+    [Fact]
+    public async Task CategoryOverrides_UpsertAndGet_RoundTrips()
+    {
+        var repo = await NewRepoAsync();
+        await repo.UpsertCategoryOverrideAsync("pycharm64", Category.Work);
+        await repo.UpsertCategoryOverrideAsync("spotify", Category.Social);
+
+        var map = await repo.GetCategoryOverridesAsync();
+        Assert.Equal(Category.Work, map["pycharm64"]);
+        Assert.Equal(Category.Social, map["spotify"]);
+    }
+
+    [Fact]
+    public async Task CategoryOverrides_Upsert_UpdatesExisting()
+    {
+        var repo = await NewRepoAsync();
+        await repo.UpsertCategoryOverrideAsync("vlc", Category.Social);
+        await repo.UpsertCategoryOverrideAsync("vlc", Category.Other);
+
+        var map = await repo.GetCategoryOverridesAsync();
+        Assert.Single(map);
+        Assert.Equal(Category.Other, map["vlc"]);
+    }
 }
