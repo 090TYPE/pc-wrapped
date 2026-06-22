@@ -1,19 +1,93 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:PcWrapped.Converters"
+        xmlns:vm="clr-namespace:PcWrapped.ViewModels"
         x:Class="PcWrapped.Views.MainWindow"
-        Width="520" Height="640" Title="PC Wrapped">
-  <DockPanel Margin="24">
-    <TextBlock DockPanel.Dock="Top" Text="PC Wrapped" FontSize="28" FontWeight="Bold"/>
-    <TextBlock DockPanel.Dock="Top" x:Name="Status" Margin="0,8,0,16"
-               Text="Собираю статистику…" Opacity="0.7"/>
-    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="12" Margin="0,16,0,0">
-      <ComboBox x:Name="ThemeBox" Width="200"/>
-      <ComboBox x:Name="SizeBox" Width="160"/>
-      <Button x:Name="RefreshBtn" Content="Обновить"/>
-      <Button x:Name="ExportBtn" Content="Сохранить карточку (PNG)"/>
-    </StackPanel>
-    <ScrollViewer>
-      <StackPanel x:Name="StatsPanel" Spacing="6"/>
-    </ScrollViewer>
-  </DockPanel>
+        Width="900" Height="620" MinWidth="760" MinHeight="520"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
+        Title="PC Wrapped">
+  <Grid ColumnDefinitions="180,*,240">
+
+    <!-- LEFT RAIL -->
+    <Border Grid.Column="0" Classes="rail" Padding="16">
+      <StackPanel Spacing="4">
+        <TextBlock Text="📊 PC Wrapped" FontWeight="Bold" FontSize="16" Margin="0,0,0,14"/>
+        <StackPanel x:Name="PeriodTabs" Spacing="2">
+          <RadioButton GroupName="period" Classes="tab" Content="Сегодня" Tag="Today"/>
+          <RadioButton GroupName="period" Classes="tab" Content="Неделя" Tag="Week" IsChecked="True"/>
+          <RadioButton GroupName="period" Classes="tab" Content="Год" Tag="Year"/>
+        </StackPanel>
+        <TextBlock Classes="lab" Text="ТЕМА" Margin="0,14,0,6"/>
+        <StackPanel x:Name="ThemeSwatches" Orientation="Horizontal" Spacing="8"/>
+        <TextBlock Classes="lab" Text="ФОРМАТ" Margin="0,14,0,6"/>
+        <StackPanel Orientation="Horizontal" Spacing="6">
+          <RadioButton x:Name="SizeSquare" GroupName="size" Classes="pill" Content="1:1" IsChecked="True"/>
+          <RadioButton x:Name="SizeStory" GroupName="size" Classes="pill" Content="9:16"/>
+        </StackPanel>
+        <Button x:Name="ExportBtn" Classes="share" Content="Поделиться ↗"
+                HorizontalAlignment="Stretch" Margin="0,18,0,0"/>
+        <TextBlock x:Name="Status" Classes="lab" Text="" Margin="0,10,0,0"/>
+      </StackPanel>
+    </Border>
+
+    <!-- CENTER -->
+    <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*" Margin="20,16">
+      <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+        <StackPanel>
+          <TextBlock x:Name="PeriodLabel" Classes="lab" Text="ТВОЯ НЕДЕЛЯ ЗА ПК"/>
+          <TextBlock x:Name="TotalText" FontSize="34" FontWeight="Bold" Text="—"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+          <TextBlock Classes="lab" Text="СЕРИЯ 🔥" HorizontalAlignment="Right"/>
+          <TextBlock x:Name="StreakText" FontSize="20" FontWeight="Bold"
+                     HorizontalAlignment="Right" Text="—"/>
+        </StackPanel>
+      </Grid>
+
+      <TextBlock Grid.Row="1" Classes="lab" Text="ТОП ПРИЛОЖЕНИЙ" Margin="0,14,0,6"/>
+
+      <ScrollViewer Grid.Row="2">
+        <ItemsControl x:Name="AppList">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><UniformGrid Columns="2"/></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:AppRowVm">
+              <Border Classes="appTile" Margin="0,0,8,8" Padding="10">
+                <Grid ColumnDefinitions="32,*">
+                  <Panel Grid.Column="0" Width="30" Height="30">
+                    <Border CornerRadius="7" Background="{StaticResource AccentBrush}">
+                      <TextBlock Text="{Binding Name, Converter={x:Static conv:FirstLetterConverter.Instance}}"
+                                 Foreground="White" FontWeight="Bold"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Image Width="30" Height="30"
+                           Source="{Binding ExecutablePath, Converter={x:Static conv:PathToIconConverter.Instance}}"/>
+                  </Panel>
+                  <StackPanel Grid.Column="1" Margin="9,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12"
+                               TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding TimeText}" Foreground="{StaticResource MutedBrush}" FontSize="11"/>
+                    <ProgressBar Classes="usage" Minimum="0" Maximum="1"
+                                 Value="{Binding Fraction}" Margin="0,4,0,0"/>
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Grid>
+
+    <!-- PREVIEW -->
+    <Border Grid.Column="2" Classes="previewPane" Padding="14">
+      <StackPanel>
+        <TextBlock Classes="lab" Text="ПРЕВЬЮ"/>
+        <Border CornerRadius="14" ClipToBounds="True" Margin="0,8,0,0">
+          <Image x:Name="PreviewImage" Stretch="Uniform" MaxHeight="440"/>
+        </Border>
+      </StackPanel>
+    </Border>
+
+  </Grid>
 </Window>

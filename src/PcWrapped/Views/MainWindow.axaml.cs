@@ -1,7 +1,10 @@
 using System;
-using System.IO;
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using PcWrapped.Core.Models;
 using PcWrapped.Rendering;
@@ -11,65 +14,95 @@ namespace PcWrapped.Views;
 
 public partial class MainWindow : Window
 {
-    private record SizeOption(string Label, Avalonia.PixelSize Size);
-
     private PeriodStats? _current;
 
     public MainWindow()
     {
         InitializeComponent();
-        var box = this.FindControl<ComboBox>("ThemeBox")!;
-        box.ItemsSource = CardThemes.All;
-        box.SelectedIndex = 0;
-        box.DisplayMemberBinding = new Avalonia.Data.Binding("DisplayName");
+        BuildThemeSwatches();
 
-        var sizeBox = this.FindControl<ComboBox>("SizeBox")!;
-        sizeBox.ItemsSource = new[]
-        {
-            new SizeOption("Квадрат 1:1", CardRenderer.Square),
-            new SizeOption("Сторис 9:16", CardRenderer.Story),
-        };
-        sizeBox.SelectedIndex = 0;
-        sizeBox.DisplayMemberBinding = new Avalonia.Data.Binding("Label");
+        var tabs = this.FindControl<StackPanel>("PeriodTabs")!;
+        foreach (var child in tabs.Children)
+            if (child is RadioButton rb)
+                rb.IsCheckedChanged += async (_, _) => { if (rb.IsChecked == true) await RefreshAsync(); };
 
-        this.FindControl<Button>("RefreshBtn")!.Click += async (_, _) => await RefreshAsync();
+        this.FindControl<RadioButton>("SizeSquare")!.IsCheckedChanged += async (_, _) => await RefreshAsync();
+        this.FindControl<RadioButton>("SizeStory")!.IsCheckedChanged += async (_, _) => await RefreshAsync();
         this.FindControl<Button>("ExportBtn")!.Click += OnExport;
+
         Opened += async (_, _) => await RefreshAsync();
     }
 
     private MainViewModel Vm => (MainViewModel)DataContext!;
 
-    private async System.Threading.Tasks.Task RefreshAsync()
+    private void BuildThemeSwatches()
     {
-        var box = this.FindControl<ComboBox>("ThemeBox")!;
-        if (box.SelectedItem is CardTheme t) Vm.SelectedTheme = t;
+        var panel = this.FindControl<StackPanel>("ThemeSwatches")!;
+        foreach (var theme in CardThemes.All)
+        {
+            var captured = theme;
+            var swatch = new Border
+            {
+                Width = 22, Height = 22, CornerRadius = new Avalonia.CornerRadius(6),
+                Background = theme.Background,
+                BorderBrush = Brushes.White, BorderThickness = new Avalonia.Thickness(0),
+                Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+            };
+            swatch.PointerPressed += async (_, _) =>
+            {
+                Vm.SelectedTheme = captured;
+                await RefreshAsync();
+            };
+            panel.Children.Add(swatch);
+        }
+    }
 
-        var sizeBox = this.FindControl<ComboBox>("SizeBox")!;
-        if (sizeBox.SelectedItem is SizeOption s) Vm.SelectedSize = s.Size;
+    private StatsPeriod CurrentPeriod()
+    {
+        var tabs = this.FindControl<StackPanel>("PeriodTabs")!;
+        foreach (var child in tabs.Children)
+            if (child is RadioButton { IsChecked: true } rb && rb.Tag is string tag
+                && Enum.TryParse<StatsPeriod>(tag, out var p))
+                return p;
+        return StatsPeriod.Week;
+    }
+
+    private static string PeriodLabelText(StatsPeriod p) => p switch
+    {
+        StatsPeriod.Today => "ТВОЙ ДЕНЬ ЗА ПК",
+        StatsPeriod.Year => "ТВОЙ ГОД ЗА ПК",
+        _ => "ТВОЯ НЕДЕЛЯ ЗА ПК",
+    };
+
+    private async Task RefreshAsync()
+    {
+        Vm.SelectedPeriod = CurrentPeriod();
+        Vm.SelectedSize = this.FindControl<RadioButton>("SizeStory")!.IsChecked == true
+            ? CardRenderer.Story : CardRenderer.Square;
 
         _current = await Vm.BuildStatsAsync(DateOnly.FromDateTime(DateTime.Now), mouseDpi: 96);
-        var panel = this.FindControl<StackPanel>("StatsPanel")!;
-        panel.Children.Clear();
-        void Add(string s) => panel.Children.Add(new TextBlock { Text = s, FontSize = 18 });
-        Add($"Всего активного времени: {(int)_current.TotalActive.TotalHours}ч {_current.TotalActive.Minutes}м");
-        if (_current.TopApps.Count > 0) Add($"Топ-приложение: {_current.TopApps[0].ProcessName}");
-        Add($"Мышь проехала: {_current.MouseKilometers:0.0} км");
-        Add($"Нажатий клавиш: {_current.Keystrokes:N0}");
-        Add($"Кликов: {_current.Clicks:N0}");
-        if (_current.PeakHour >= 0) Add($"Пик активности: {_current.PeakHour:00}:00");
-        Add($"Серия дней подряд: {_current.StreakDays}");
+        var paths = await Vm.GetAppPathsAsync();
+
+        this.FindControl<TextBlock>("PeriodLabel")!.Text = PeriodLabelText(Vm.SelectedPeriod);
+        this.FindControl<TextBlock>("TotalText")!.Text =
+            $"{(int)_current.TotalActive.TotalHours}ч {_current.TotalActive.Minutes:00}м";
+        this.FindControl<TextBlock>("StreakText")!.Text = $"{_current.StreakDays} дн.";
+        this.FindControl<ItemsControl>("AppList")!.ItemsSource = AppRowVm.FromStats(_current, paths);
+
+        RenderPreview();
         this.FindControl<TextBlock>("Status")!.Text = "Готово";
+    }
+
+    private void RenderPreview()
+    {
+        if (_current is null) return;
+        var bmp = CardRenderer.RenderToBitmap(_current, Vm.SelectedTheme, Vm.SelectedSize);
+        this.FindControl<Image>("PreviewImage")!.Source = bmp;
     }
 
     private async void OnExport(object? sender, RoutedEventArgs e)
     {
         if (_current is null) return;
-        var box = this.FindControl<ComboBox>("ThemeBox")!;
-        if (box.SelectedItem is CardTheme t) Vm.SelectedTheme = t;
-
-        var sizeBox = this.FindControl<ComboBox>("SizeBox")!;
-        if (sizeBox.SelectedItem is SizeOption s) Vm.SelectedSize = s.Size;
-
         var suffix = Vm.SelectedSize == CardRenderer.Story ? "story" : "square";
         var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {

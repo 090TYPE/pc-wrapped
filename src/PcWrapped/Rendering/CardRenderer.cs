@@ -66,15 +66,21 @@ public static class CardRenderer
         };
     }
 
-    /// <summary>Рендерит карточку в PNG-файл.</summary>
-    public static void RenderToPng(PeriodStats stats, CardTheme theme, PixelSize size, string path)
+    /// <summary>Рендерит карточку в Avalonia Bitmap (для превью).</summary>
+    public static RenderTargetBitmap RenderToBitmap(PeriodStats stats, CardTheme theme, PixelSize size)
     {
         var card = BuildCard(stats, theme, size);
         card.Measure(new Size(size.Width, size.Height));
         card.Arrange(new Rect(0, 0, size.Width, size.Height));
-
-        using var bmp = new RenderTargetBitmap(size, new Vector(96, 96));
+        var bmp = new RenderTargetBitmap(size, new Vector(96, 96));
         bmp.Render(card);
+        return bmp;
+    }
+
+    /// <summary>Рендерит карточку в PNG-файл.</summary>
+    public static void RenderToPng(PeriodStats stats, CardTheme theme, PixelSize size, string path)
+    {
+        using var bmp = RenderToBitmap(stats, theme, size);
         bmp.Save(path);
     }
 
