@@ -57,4 +57,17 @@ public class JsonSettingsStoreTests
             if (File.Exists(path)) File.Delete(path);
         }
     }
+
+    [Fact]
+    public void Language_RoundTrips()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"pcw-{Guid.NewGuid():N}.json");
+        try
+        {
+            var store = new JsonSettingsStore(path);
+            store.Save(new AppSettings(true, true, false, "en"));
+            Assert.Equal("en", store.Load().Language);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
 }

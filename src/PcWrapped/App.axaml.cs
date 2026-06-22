@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Timers;
 using Avalonia;
@@ -8,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using PcWrapped.Core.Settings;
 using PcWrapped.Core.Storage;
 using PcWrapped.Core.Tracking;
+using PcWrapped.Localization;
 using PcWrapped.Native;
 using PcWrapped.ViewModels;
 using PcWrapped.Views;
@@ -32,6 +34,10 @@ public partial class App : Application
 
         var settingsStore = new JsonSettingsStore(Path.Combine(dir, "settings.json"));
         var settings = settingsStore.Load();
+        Loc.Current = settings.HasOnboarded
+            ? Loc.Parse(settings.Language)
+            : (CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ru"
+                ? AppLanguage.Ru : AppLanguage.En);
 
         _repo = new SqliteStatsRepository($"Data Source={Path.Combine(dir, "stats.db")}");
         await _repo.InitializeAsync();
@@ -61,7 +67,7 @@ public partial class App : Application
                 {
                     var countInput = onboarding.CountInput;
                     var autostart = onboarding.Autostart;
-                    settingsStore.Save(new AppSettings(true, countInput, autostart));
+                    settingsStore.Save(new AppSettings(true, countInput, autostart, Loc.Code(Loc.Current)));
                     try { AutostartManager.SetEnabled(autostart, Environment.ProcessPath!); }
                     catch { /* registry may be unavailable */ }
                     if (countInput) _input!.Start();
