@@ -188,9 +188,11 @@ public partial class MainWindow : Window
         // category with a check glyph in the MenuItem.Icon instead.
         if (sender is ContextMenu cm && cm.DataContext is AppRowVm row)
             foreach (var item in cm.Items.OfType<MenuItem>())
-                item.Icon = item.Tag as string == row.Category.ToString()
-                    ? new TextBlock { Text = "✓" }
-                    : null;
+            {
+                var tag = item.Tag as string;
+                item.Header = Loc.T("cat." + (tag ?? "other").ToLowerInvariant());
+                item.Icon = tag == row.Category.ToString() ? new TextBlock { Text = "✓" } : null;
+            }
     }
 
     private async void OnAssignCategory(object? sender, RoutedEventArgs e)
