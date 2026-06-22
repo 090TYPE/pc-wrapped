@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using PcWrapped.Core.Models;
+using PcWrapped.Localization;
 
 namespace PcWrapped.Rendering;
 
@@ -16,10 +17,10 @@ public static class CategoryPalette
 
     public static string Name(Category c) => c switch
     {
-        Category.Work => "Работа",
-        Category.Games => "Игры",
-        Category.Social => "Соцсети",
-        Category.Browser => "Браузер",
-        _ => "Прочее",
+        Category.Work => Loc.T("cat.work"),
+        Category.Games => Loc.T("cat.games"),
+        Category.Social => Loc.T("cat.social"),
+        Category.Browser => Loc.T("cat.browser"),
+        _ => Loc.T("cat.other"),
     };
 }

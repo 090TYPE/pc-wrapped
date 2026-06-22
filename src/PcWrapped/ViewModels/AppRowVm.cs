@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using PcWrapped.Core.Categorization;
 using PcWrapped.Core.Models;
+using PcWrapped.Localization;
 
 namespace PcWrapped.ViewModels;
 
@@ -18,11 +19,8 @@ public sealed record AppRowVm(string Name, string TimeText, double Fraction,
         return stats.TopApps.Select(a =>
         {
             paths.TryGetValue(a.ProcessName, out var p);
-            return new AppRowVm(a.ProcessName, FormatHours(a.Duration),
+            return new AppRowVm(a.ProcessName, Loc.Hours(a.Duration),
                 a.Duration.TotalSeconds / max, p, categorizer.Categorize(a.ProcessName));
         }).ToList();
     }
-
-    private static string FormatHours(TimeSpan t) =>
-        t.TotalHours >= 1 ? $"{(int)t.TotalHours}ч {t.Minutes:00}м" : $"{t.Minutes}м";
 }

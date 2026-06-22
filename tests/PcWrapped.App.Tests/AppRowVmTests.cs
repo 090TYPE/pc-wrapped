@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using PcWrapped.Core.Categorization;
 using PcWrapped.Core.Models;
+using PcWrapped.Localization;
 using PcWrapped.ViewModels;
 using Xunit;
 
@@ -17,6 +18,7 @@ public class AppRowVmTests
     [Fact]
     public void FromStats_ComputesFractionTimeAndPath()
     {
+        Loc.Current = AppLanguage.Ru;
         var stats = Stats(
             new AppUsage("code", TimeSpan.FromHours(2)),
             new AppUsage("chrome", TimeSpan.FromHours(1)));
@@ -38,6 +40,7 @@ public class AppRowVmTests
     [Fact]
     public void FromStats_EmptyTopApps_ReturnsEmpty()
     {
+        Loc.Current = AppLanguage.Ru;
         Assert.Empty(AppRowVm.FromStats(Stats(),
             new Dictionary<string, string>(), new Categorizer(DefaultRules.Map)));
     }

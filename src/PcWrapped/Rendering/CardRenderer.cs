@@ -9,6 +9,7 @@ using Avalonia.Media.Imaging;
 using PcWrapped.Controls;
 using PcWrapped.Core.Aggregation;
 using PcWrapped.Core.Models;
+using PcWrapped.Localization;
 
 namespace PcWrapped.Rendering;
 
@@ -53,9 +54,9 @@ public static class CardRenderer
         static string Header(PeriodStats s)
         {
             int days = (s.To.DayNumber - s.From.DayNumber);
-            if (days <= 0) return "ТВОЙ ДЕНЬ ЗА ПК";
-            if (days <= 31) return "ТВОЯ НЕДЕЛЯ ЗА ПК";
-            return "ТВОЙ ГОД ЗА ПК";
+            if (days <= 0) return Loc.T("period.day");
+            if (days <= 31) return Loc.T("period.week");
+            return Loc.T("period.year");
         }
 
         stack.Children.Add(new TextBlock
@@ -65,7 +66,7 @@ public static class CardRenderer
         });
         stack.Children.Add(new TextBlock
         {
-            Text = FormatHours(stats.TotalActive), Foreground = new SolidColorBrush(theme.TextColor),
+            Text = Loc.Hours(stats.TotalActive), Foreground = new SolidColorBrush(theme.TextColor),
             FontFamily = theme.FontFamily, FontSize = 110, FontWeight = FontWeight.Black,
         });
 
@@ -75,7 +76,7 @@ public static class CardRenderer
             if (shown >= 3) break;
             IImage? appIcon = null;
             appIcons?.TryGetValue(app.ProcessName, out appIcon);
-            Row(app.ProcessName, FormatHours(app.Duration), appIcon);
+            Row(app.ProcessName, Loc.Hours(app.Duration), appIcon);
             shown++;
         }
         // ---- charts band (category donut + hourly bars), theme-shaded ----
@@ -125,10 +126,10 @@ public static class CardRenderer
             });
         }
 
-        Row("🖱️ Мышь проехала", $"{stats.MouseKilometers:0.0} км");
-        Row("⌨️ Нажатий", $"{stats.Keystrokes:N0}");
-        if (stats.PeakHour >= 0) Row("🔥 Пик", $"{stats.PeakHour:00}:00");
-        Row("📅 Серия", $"{stats.StreakDays} дн.");
+        Row(Loc.T("card.mouse"), $"{stats.MouseKilometers:0.0} {Loc.T("unit.km")}");
+        Row(Loc.T("card.keys"), $"{stats.Keystrokes:N0}");
+        if (stats.PeakHour >= 0) Row(Loc.T("card.peak"), $"{stats.PeakHour:00}:00");
+        Row(Loc.T("card.streak"), Loc.Days(stats.StreakDays));
 
         return new Border
         {
@@ -161,7 +162,4 @@ public static class CardRenderer
 
     private static Color WithOpacity(Color c, double o) =>
         new Color((byte)(o * 255), c.R, c.G, c.B);
-
-    private static string FormatHours(TimeSpan t) =>
-        t.TotalHours >= 1 ? $"{(int)t.TotalHours}ч {t.Minutes:00}м" : $"{t.Minutes}м";
 }

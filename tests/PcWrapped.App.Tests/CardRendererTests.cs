@@ -3,6 +3,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Skia;
 using PcWrapped.Core.Models;
+using PcWrapped.Localization;
 using PcWrapped.Rendering;
 using Xunit;
 
@@ -92,5 +93,21 @@ public class CardRendererTests
 
         Assert.True(File.Exists(path));
         Assert.True(new FileInfo(path).Length > 1000);
+    }
+
+    [AvaloniaFact]
+    public void RenderToPng_English_ProducesValidPng()
+    {
+        Loc.Current = AppLanguage.En;
+        try
+        {
+            var dir = Path.Combine(Path.GetTempPath(), "pcwrapped-test");
+            Directory.CreateDirectory(dir);
+            var path = Path.Combine(dir, "card-en.png");
+            CardRenderer.RenderToPng(SampleWithCharts(), CardThemes.Gradient, CardRenderer.Square, path);
+            Assert.True(File.Exists(path));
+            Assert.True(new FileInfo(path).Length > 1000);
+        }
+        finally { Loc.Current = AppLanguage.Ru; }
     }
 }
