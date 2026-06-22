@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PcWrapped.Core.Categorization;
 using PcWrapped.Core.Models;
 using PcWrapped.ViewModels;
 using Xunit;
@@ -20,7 +21,8 @@ public class AppRowVmTests
             new AppUsage("code", TimeSpan.FromHours(2)),
             new AppUsage("chrome", TimeSpan.FromHours(1)));
         var rows = AppRowVm.FromStats(stats,
-            new Dictionary<string, string> { ["code"] = @"C:\code.exe" });
+            new Dictionary<string, string> { ["code"] = @"C:\code.exe" },
+            new Categorizer(DefaultRules.Map));
 
         Assert.Equal(2, rows.Count);
         Assert.Equal("code", rows[0].Name);
@@ -29,11 +31,14 @@ public class AppRowVmTests
         Assert.Equal("2ч 00м", rows[0].TimeText);
         Assert.Equal(@"C:\code.exe", rows[0].ExecutablePath);
         Assert.Null(rows[1].ExecutablePath);
+        Assert.Equal(Category.Work, rows[0].Category);
+        Assert.Equal(Category.Browser, rows[1].Category);
     }
 
     [Fact]
     public void FromStats_EmptyTopApps_ReturnsEmpty()
     {
-        Assert.Empty(AppRowVm.FromStats(Stats(), new Dictionary<string, string>()));
+        Assert.Empty(AppRowVm.FromStats(Stats(),
+            new Dictionary<string, string>(), new Categorizer(DefaultRules.Map)));
     }
 }

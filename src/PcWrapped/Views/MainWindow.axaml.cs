@@ -93,7 +93,7 @@ public partial class MainWindow : Window
         this.FindControl<TextBlock>("TotalText")!.Text =
             $"{(int)_current.TotalActive.TotalHours}ч {_current.TotalActive.Minutes:00}м";
         this.FindControl<TextBlock>("StreakText")!.Text = $"{_current.StreakDays} дн.";
-        this.FindControl<ItemsControl>("AppList")!.ItemsSource = AppRowVm.FromStats(_current, paths);
+        this.FindControl<ItemsControl>("AppList")!.ItemsSource = AppRowVm.FromStats(_current, paths, Vm.Categorizer);
 
         UpdateCharts();
         RenderPreview();

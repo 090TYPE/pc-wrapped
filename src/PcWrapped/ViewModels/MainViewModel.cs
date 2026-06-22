@@ -14,7 +14,7 @@ public enum StatsPeriod { Today, Week, Year }
 public sealed class MainViewModel
 {
     private readonly IStatsRepository _repo;
-    private readonly Categorizer _categorizer = new(DefaultRules.Map);
+    public Categorizer Categorizer { get; private set; } = new(DefaultRules.Map);
 
     public CardTheme SelectedTheme { get; set; } = CardThemes.Gradient;
     public Avalonia.PixelSize SelectedSize { get; set; } = CardRenderer.Square;
@@ -38,11 +38,17 @@ public sealed class MainViewModel
         var counters = await _repo.GetInputCountersAsync(from, today);
         var activeDays = await _repo.GetActiveDaysAsync();
 
-        return Aggregator.BuildPeriodStats(from, today, samples, _categorizer,
+        var overrides = await _repo.GetCategoryOverridesAsync();
+        Categorizer = new Categorizer(CategoryRules.Merge(DefaultRules.Map, overrides));
+
+        return Aggregator.BuildPeriodStats(from, today, samples, Categorizer,
             counters, activeDays, today, topAppLimit: 12, mouseDpi: mouseDpi);
     }
 
     public Task<IReadOnlyDictionary<string, string>> GetAppPathsAsync() => _repo.GetAppPathsAsync();
+
+    public Task AssignCategoryAsync(string process, Category category) =>
+        _repo.UpsertCategoryOverrideAsync(process, category);
 
     public Task ExportAsync(PeriodStats stats, string path,
         IReadOnlyDictionary<string, Avalonia.Media.IImage>? appIcons)
