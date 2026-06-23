@@ -18,6 +18,8 @@ public sealed class AppController
     private readonly HashSet<string> _excluded;
     private bool _tracking;
     private bool _autostart;
+    private string _theme;
+    private string _period;
 
     public AppController(IStatsRepository repo, Win32InputCounterSource input,
         JsonSettingsStore settingsStore, string dataDir, AppSettings settings,
@@ -29,6 +31,8 @@ public sealed class AppController
         _dataDir = dataDir;
         _tracking = settings.CountInput;
         _autostart = settings.Autostart;
+        _theme = settings.Theme;
+        _period = settings.Period;
         _excluded = new HashSet<string>(excluded, StringComparer.OrdinalIgnoreCase);
     }
 
@@ -39,6 +43,10 @@ public sealed class AppController
 
     public bool TrackingEnabled => _tracking;
     public bool AutostartEnabled => _autostart;
+    public string Theme => _theme;
+    public string Period => _period;
+    public void SetTheme(string id) { _theme = id; SaveSettings(); }
+    public void SetPeriod(string period) { _period = period; SaveSettings(); }
 
     public void SetTracking(bool on)
     {
@@ -77,6 +85,12 @@ public sealed class AppController
     private void SaveSettings()
     {
         var s = _settingsStore.Load();
-        _settingsStore.Save(s with { CountInput = _tracking, Autostart = _autostart });
+        _settingsStore.Save(s with
+        {
+            CountInput = _tracking,
+            Autostart = _autostart,
+            Theme = _theme,
+            Period = _period,
+        });
     }
 }

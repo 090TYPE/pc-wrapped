@@ -70,4 +70,19 @@ public class JsonSettingsStoreTests
         }
         finally { if (File.Exists(path)) File.Delete(path); }
     }
+
+    [Fact]
+    public void ThemeAndPeriod_RoundTrip()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"pcw-{Guid.NewGuid():N}.json");
+        try
+        {
+            var store = new JsonSettingsStore(path);
+            store.Save(new AppSettings(true, true, true, "en", "terminal", "Year"));
+            var loaded = store.Load();
+            Assert.Equal("terminal", loaded.Theme);
+            Assert.Equal("Year", loaded.Period);
+        }
+        finally { if (File.Exists(path)) File.Delete(path); }
+    }
 }
