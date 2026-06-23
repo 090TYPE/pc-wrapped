@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using PcWrapped.Core.Aggregation;
 using PcWrapped.Core.Categorization;
@@ -35,13 +36,17 @@ public sealed class MainViewModel
         var toDt = new DateTimeOffset(today.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
 
         var samples = await _repo.GetSamplesAsync(fromDt, toDt);
+        var excluded = await _repo.GetExclusionsAsync();
+        var visible = excluded.Count == 0
+            ? samples
+            : samples.Where(s => !excluded.Contains(s.ProcessName)).ToList();
         var counters = await _repo.GetInputCountersAsync(from, today);
         var activeDays = await _repo.GetActiveDaysAsync();
 
         var overrides = await _repo.GetCategoryOverridesAsync();
         Categorizer = new Categorizer(CategoryRules.Merge(DefaultRules.Map, overrides));
 
-        return Aggregator.BuildPeriodStats(from, today, samples, Categorizer,
+        return Aggregator.BuildPeriodStats(from, today, visible, Categorizer,
             counters, activeDays, today, topAppLimit: 12, mouseDpi: mouseDpi);
     }
 

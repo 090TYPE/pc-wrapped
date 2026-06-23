@@ -22,6 +22,8 @@ public partial class MainWindow : Window
     private PeriodStats? _current;
     private System.Collections.Generic.IReadOnlyDictionary<string, string>? _currentPaths;
 
+    public PcWrapped.AppController? Controller { get; set; }
+
     public MainWindow()
     {
         InitializeComponent();

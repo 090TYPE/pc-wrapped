@@ -21,6 +21,7 @@ public partial class App : Application
     private SqliteStatsRepository? _repo;
     private Win32InputCounterSource? _input;
     private ActivityTracker? _tracker;
+    private AppController? _controller;
     private Timer? _timer;
     private const int IntervalSeconds = 2;
 
@@ -46,8 +47,10 @@ public partial class App : Application
         // Always create the input source and tracker so the timer drains counters
         // regardless of whether hooks are running. Hooks are only started if opted in.
         _input = new Win32InputCounterSource();
+        var excluded = await _repo.GetExclusionsAsync();
+        _controller = new AppController(_repo, _input, settingsStore, dir, settings, excluded);
         _tracker = new ActivityTracker(_repo, new Win32ForegroundWindowSource(), _input,
-            IntervalSeconds, idleThresholdSeconds: 180);
+            IntervalSeconds, idleThresholdSeconds: 180, isExcluded: _controller.IsExcluded);
 
         _timer = new Timer(IntervalSeconds * 1000);
         _timer.Elapsed += async (_, _) =>
@@ -89,7 +92,7 @@ public partial class App : Application
     private void ShowMainWindow(IClassicDesktopStyleApplicationLifetime desktop)
     {
         var vm = new MainViewModel(_repo!);
-        var window = new MainWindow { DataContext = vm };
+        var window = new MainWindow { DataContext = vm, Controller = _controller };
         desktop.MainWindow = window;
         window.Show();
     }
