@@ -33,7 +33,7 @@ public static class Loc
     {
         ["tab.today"] = "Сегодня", ["tab.week"] = "Неделя", ["tab.year"] = "Год",
         ["rail.theme"] = "ТЕМА", ["rail.format"] = "ФОРМАТ", ["rail.language"] = "ЯЗЫК",
-        ["rail.share"] = "Поделиться ↗", ["rail.streak"] = "СЕРИЯ 🔥",
+        ["rail.share"] = "Поделиться ↗", ["rail.copy"] = "Копировать", ["rail.streak"] = "СЕРИЯ 🔥",
         ["rail.hourly"] = "АКТИВНОСТЬ ПО ЧАСАМ", ["rail.topapps"] = "ТОП ПРИЛОЖЕНИЙ",
         ["rail.preview"] = "ПРЕВЬЮ", ["status.ready"] = "Готово",
         ["dash.empty"] = "Собираю статистику… загляни позже",
@@ -68,7 +68,7 @@ public static class Loc
     {
         ["tab.today"] = "Today", ["tab.week"] = "Week", ["tab.year"] = "Year",
         ["rail.theme"] = "THEME", ["rail.format"] = "FORMAT", ["rail.language"] = "LANGUAGE",
-        ["rail.share"] = "Share ↗", ["rail.streak"] = "STREAK 🔥",
+        ["rail.share"] = "Share ↗", ["rail.copy"] = "Copy", ["rail.streak"] = "STREAK 🔥",
         ["rail.hourly"] = "ACTIVITY BY HOUR", ["rail.topapps"] = "TOP APPS",
         ["rail.preview"] = "PREVIEW", ["status.ready"] = "Done",
         ["dash.empty"] = "Collecting your stats… check back later",

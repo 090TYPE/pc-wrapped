@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -37,6 +38,7 @@ public partial class MainWindow : Window
         this.FindControl<RadioButton>("SizeSquare")!.IsCheckedChanged += async (_, _) => await RefreshAsync();
         this.FindControl<RadioButton>("SizeStory")!.IsCheckedChanged += async (_, _) => await RefreshAsync();
         this.FindControl<Button>("ExportBtn")!.Click += OnExport;
+        this.FindControl<Button>("CopyBtn")!.Click += OnCopy;
         this.FindControl<Button>("SettingsBtn")!.Click += OnOpenSettings;
 
         var langRu = this.FindControl<RadioButton>("LangRu")!;
@@ -122,6 +124,7 @@ public partial class MainWindow : Window
         this.FindControl<TextBlock>("LblTopApps")!.Text = Loc.T("rail.topapps");
         this.FindControl<TextBlock>("LblPreview")!.Text = Loc.T("rail.preview");
         this.FindControl<Button>("ExportBtn")!.Content = Loc.T("rail.share");
+        this.FindControl<Button>("CopyBtn")!.Content = Loc.T("rail.copy");
         ToolTip.SetTip(this.FindControl<Button>("SettingsBtn")!, Loc.T("rail.settings"));
     }
 
@@ -268,5 +271,15 @@ public partial class MainWindow : Window
         });
         if (file is null) return;
         await Vm.ExportAsync(_current, file.Path.LocalPath, CurrentIcons());
+    }
+
+    private void OnCopy(object? sender, RoutedEventArgs e)
+    {
+        if (_current is null) return;
+        using var bmp = CardRenderer.RenderToBitmap(_current, Vm.SelectedTheme, Vm.SelectedSize, CurrentIcons());
+        using var ms = new MemoryStream();
+        bmp.Save(ms);
+        ms.Position = 0;
+        PcWrapped.Native.ClipboardImage.SetPng(ms);
     }
 }
