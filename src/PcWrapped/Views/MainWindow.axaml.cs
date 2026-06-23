@@ -47,7 +47,22 @@ public partial class MainWindow : Window
         langEn.IsCheckedChanged += async (_, _) => { if (langEn.IsChecked == true) await SetLanguage(AppLanguage.En); };
         ApplyLanguage();
 
-        Opened += async (_, _) => await RefreshAsync();
+        Opened += async (_, _) => { ApplyControllerPrefs(); await RefreshAsync(); };
+    }
+
+    private void ApplyControllerPrefs()
+    {
+        if (Controller is null) return;
+        var theme = CardThemes.All.FirstOrDefault(t => t.Id == Controller.Theme);
+        if (theme is not null) Vm.SelectedTheme = theme;
+        if (Enum.TryParse<ViewModels.StatsPeriod>(Controller.Period, out var p))
+        {
+            Vm.SelectedPeriod = p;
+            var tabs = this.FindControl<StackPanel>("PeriodTabs")!;
+            foreach (var child in tabs.Children)
+                if (child is RadioButton rb && rb.Tag as string == p.ToString())
+                    rb.IsChecked = true;
+        }
     }
 
     private MainViewModel Vm => (MainViewModel)DataContext!;
@@ -68,6 +83,7 @@ public partial class MainWindow : Window
             swatch.PointerPressed += async (_, _) =>
             {
                 Vm.SelectedTheme = captured;
+                Controller?.SetTheme(captured.Id);
                 await RefreshAsync();
             };
             panel.Children.Add(swatch);
@@ -112,12 +128,20 @@ public partial class MainWindow : Window
     private async Task RefreshAsync()
     {
         Vm.SelectedPeriod = CurrentPeriod();
+        Controller?.SetPeriod(Vm.SelectedPeriod.ToString());
         Vm.SelectedSize = this.FindControl<RadioButton>("SizeStory")!.IsChecked == true
             ? CardRenderer.Story : CardRenderer.Square;
 
-        _current = await Vm.BuildStatsAsync(DateOnly.FromDateTime(DateTime.Now), mouseDpi: 96);
+        _current = await Vm.BuildStatsAsync(DateOnly.FromDateTime(DateTime.Now), mouseDpi: 96 * RenderScaling);
         var paths = await Vm.GetAppPathsAsync();
         _currentPaths = paths;
+
+        bool empty = _current.TotalActive == TimeSpan.Zero && _current.TopApps.Count == 0;
+        this.FindControl<TextBlock>("EmptyHint")!.Text = Loc.T("dash.empty");
+        this.FindControl<TextBlock>("EmptyHint")!.IsVisible = empty;
+        this.FindControl<Grid>("ChartsRow")!.IsVisible = !empty;
+        this.FindControl<TextBlock>("LblTopApps")!.IsVisible = !empty;
+        this.FindControl<ScrollViewer>("AppsScroll")!.IsVisible = !empty;
 
         this.FindControl<TextBlock>("PeriodLabel")!.Text = Loc.T(Vm.SelectedPeriod switch
         {

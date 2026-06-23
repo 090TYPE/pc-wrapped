@@ -52,7 +52,7 @@
         </StackPanel>
       </Grid>
 
-      <Grid Grid.Row="1" ColumnDefinitions="Auto,*" Margin="0,16,0,0">
+      <Grid x:Name="ChartsRow" Grid.Row="1" ColumnDefinitions="Auto,*" Margin="0,16,0,0">
         <StackPanel Orientation="Horizontal" Spacing="12">
           <ctl:CategoryDonut x:Name="Donut" Width="104" Height="104"/>
           <StackPanel x:Name="DonutLegend" VerticalAlignment="Center" Spacing="3"/>
@@ -72,7 +72,12 @@
 
       <TextBlock x:Name="LblTopApps" Grid.Row="2" Classes="lab" Text="ТОП ПРИЛОЖЕНИЙ" Margin="0,16,0,6"/>
 
-      <ScrollViewer Grid.Row="3">
+      <TextBlock x:Name="EmptyHint" Grid.Row="1" Grid.RowSpan="3"
+                 Text="Собираю статистику…" Foreground="{StaticResource MutedBrush}"
+                 FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                 TextWrapping="Wrap" TextAlignment="Center" IsVisible="False"/>
+
+      <ScrollViewer x:Name="AppsScroll" Grid.Row="3">
         <ItemsControl x:Name="AppList">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
