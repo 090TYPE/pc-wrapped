@@ -105,4 +105,36 @@ public class ActivityTrackerTests
         var map = await repo.GetAppPathsAsync();
         Assert.Empty(map);
     }
+
+    [Fact]
+    public async Task Tick_ExcludedProcess_NotRecorded_ButCountersStill()
+    {
+        var repo = await NewRepoAsync();
+        var fg = new FakeForeground { Current = new ForegroundInfo("code", "x", @"C:\code.exe"), Idle = 0 };
+        var input = new FakeInput { Pending = new InputCounters(5, 1, 20) };
+        var tracker = new ActivityTracker(repo, fg, input, 2, 60, isExcluded: p => p == "code");
+
+        await tracker.TickAsync(new DateTimeOffset(2026, 6, 9, 10, 0, 0, TimeSpan.Zero));
+
+        Assert.Empty(await repo.GetSamplesAsync(
+            new DateTimeOffset(2026, 6, 9, 0, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 10, 0, 0, 0, TimeSpan.Zero)));
+        Assert.Empty(await repo.GetAppPathsAsync());
+        var counters = await repo.GetInputCountersAsync(new DateOnly(2026, 6, 9), new DateOnly(2026, 6, 9));
+        Assert.Equal(5, counters.Keystrokes); // input counters still recorded
+    }
+
+    [Fact]
+    public async Task Tick_NotExcluded_RecordsSample()
+    {
+        var repo = await NewRepoAsync();
+        var fg = new FakeForeground { Current = new ForegroundInfo("code", "x"), Idle = 0 };
+        var tracker = new ActivityTracker(repo, fg, new FakeInput(), 2, 60, isExcluded: p => false);
+
+        await tracker.TickAsync(new DateTimeOffset(2026, 6, 9, 10, 0, 0, TimeSpan.Zero));
+
+        Assert.Single(await repo.GetSamplesAsync(
+            new DateTimeOffset(2026, 6, 9, 0, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 6, 10, 0, 0, 0, TimeSpan.Zero)));
+    }
 }

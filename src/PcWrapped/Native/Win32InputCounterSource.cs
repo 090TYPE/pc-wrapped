@@ -107,10 +107,15 @@ public sealed class Win32InputCounterSource : IInputCounterSource, IDisposable
         return new InputCounters(k, c, p);
     }
 
-    public void Dispose()
+    public void Stop()
     {
         if (_kbHook != IntPtr.Zero) UnhookWindowsHookEx(_kbHook);
         if (_mouseHook != IntPtr.Zero) UnhookWindowsHookEx(_mouseHook);
         _kbHook = _mouseHook = IntPtr.Zero;
+    }
+
+    public void Dispose()
+    {
+        Stop();
     }
 }
