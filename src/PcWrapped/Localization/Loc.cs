@@ -49,6 +49,18 @@ public static class Loc
         ["onb.vanity"] = "Считать нажатия клавиш и движение мыши",
         ["onb.autostart"] = "Запускать при старте Windows",
         ["onb.start"] = "Начать",
+        ["rail.settings"] = "Настройки",
+        ["menu.exclude"] = "Исключить",
+        ["settings.title"] = "Настройки",
+        ["settings.tracking"] = "Считать ввод (клавиши/мышь)",
+        ["settings.autostart"] = "Запускать при старте Windows",
+        ["settings.exclusions"] = "Исключённые приложения",
+        ["settings.noExclusions"] = "Нет исключений",
+        ["settings.clear"] = "Очистить данные",
+        ["settings.clearConfirm"] = "Точно удалить всю статистику?",
+        ["settings.confirm"] = "Удалить",
+        ["settings.cancel"] = "Отмена",
+        ["settings.openFolder"] = "Открыть папку данных",
     };
 
     private static readonly Dictionary<string, string> En = new()
@@ -71,5 +83,17 @@ public static class Loc
         ["onb.vanity"] = "Count keystrokes and mouse movement",
         ["onb.autostart"] = "Launch on Windows startup",
         ["onb.start"] = "Start",
+        ["rail.settings"] = "Settings",
+        ["menu.exclude"] = "Exclude",
+        ["settings.title"] = "Settings",
+        ["settings.tracking"] = "Count input (keys/mouse)",
+        ["settings.autostart"] = "Launch on Windows startup",
+        ["settings.exclusions"] = "Excluded apps",
+        ["settings.noExclusions"] = "No exclusions",
+        ["settings.clear"] = "Clear data",
+        ["settings.clearConfirm"] = "Really delete all statistics?",
+        ["settings.confirm"] = "Delete",
+        ["settings.cancel"] = "Cancel",
+        ["settings.openFolder"] = "Open data folder",
     };
 }

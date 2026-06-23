@@ -13,6 +13,8 @@
     <Border Grid.Column="0" Classes="rail" Padding="16">
       <StackPanel Spacing="4">
         <TextBlock Text="📊 PC Wrapped" FontWeight="Bold" FontSize="16" Margin="0,0,0,14"/>
+        <Button x:Name="SettingsBtn" Content="⚙" HorizontalAlignment="Right" Margin="0,-30,0,8"
+                Background="Transparent" Padding="4"/>
         <StackPanel x:Name="PeriodTabs" Spacing="2">
           <RadioButton x:Name="TabToday" GroupName="period" Classes="tab" Content="Сегодня" Tag="Today"/>
           <RadioButton x:Name="TabWeek" GroupName="period" Classes="tab" Content="Неделя" Tag="Week" IsChecked="True"/>
@@ -85,6 +87,8 @@
                     <MenuItem Header="Соцсети" Tag="Social" Click="OnAssignCategory"/>
                     <MenuItem Header="Браузер" Tag="Browser" Click="OnAssignCategory"/>
                     <MenuItem Header="Прочее" Tag="Other" Click="OnAssignCategory"/>
+                    <Separator/>
+                    <MenuItem x:Name="ExcludeItem" Header="Исключить" Tag="__exclude" Click="OnExcludeApp"/>
                   </ContextMenu>
                 </Border.ContextMenu>
                 <Grid ColumnDefinitions="32,*">

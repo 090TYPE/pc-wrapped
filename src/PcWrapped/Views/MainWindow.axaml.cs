@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         this.FindControl<RadioButton>("SizeSquare")!.IsCheckedChanged += async (_, _) => await RefreshAsync();
         this.FindControl<RadioButton>("SizeStory")!.IsCheckedChanged += async (_, _) => await RefreshAsync();
         this.FindControl<Button>("ExportBtn")!.Click += OnExport;
+        this.FindControl<Button>("SettingsBtn")!.Click += OnOpenSettings;
 
         var langRu = this.FindControl<RadioButton>("LangRu")!;
         var langEn = this.FindControl<RadioButton>("LangEn")!;
@@ -105,6 +106,7 @@ public partial class MainWindow : Window
         this.FindControl<TextBlock>("LblTopApps")!.Text = Loc.T("rail.topapps");
         this.FindControl<TextBlock>("LblPreview")!.Text = Loc.T("rail.preview");
         this.FindControl<Button>("ExportBtn")!.Content = Loc.T("rail.share");
+        ToolTip.SetTip(this.FindControl<Button>("SettingsBtn")!, Loc.T("rail.settings"));
     }
 
     private async Task RefreshAsync()
@@ -189,12 +191,18 @@ public partial class MainWindow : Window
         // Avalonia 11.0.10 MenuItem has no ToggleType/IsChecked; show the current
         // category with a check glyph in the MenuItem.Icon instead.
         if (sender is ContextMenu cm && cm.DataContext is AppRowVm row)
+        {
             foreach (var item in cm.Items.OfType<MenuItem>())
             {
                 var tag = item.Tag as string;
+                if (tag == "__exclude") continue;
                 item.Header = Loc.T("cat." + (tag ?? "other").ToLowerInvariant());
                 item.Icon = tag == row.Category.ToString() ? new TextBlock { Text = "✓" } : null;
             }
+
+            var exclude = cm.Items.OfType<MenuItem>().FirstOrDefault(m => (m.Tag as string) == "__exclude");
+            if (exclude is not null) exclude.Header = Loc.T("menu.exclude");
+        }
     }
 
     private async void OnAssignCategory(object? sender, RoutedEventArgs e)
@@ -206,6 +214,23 @@ public partial class MainWindow : Window
             await Vm.AssignCategoryAsync(row.Name, cat);
             await RefreshAsync();
         }
+    }
+
+    private async void OnExcludeApp(object? sender, RoutedEventArgs e)
+    {
+        if (Controller is not null && sender is MenuItem mi && mi.DataContext is ViewModels.AppRowVm row)
+        {
+            await Controller.AddExclusionAsync(row.Name);
+            await RefreshAsync();
+        }
+    }
+
+    private async void OnOpenSettings(object? sender, RoutedEventArgs e)
+    {
+        if (Controller is null) return;
+        var win = new SettingsWindow(Controller);
+        await win.ShowDialog(this);
+        await RefreshAsync();
     }
 
     private async void OnExport(object? sender, RoutedEventArgs e)

@@ -1,0 +1,29 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PcWrapped.Views.SettingsWindow"
+        Width="440" Height="520"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
+        WindowStartupLocation="CenterOwner" Title="Settings">
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="20">
+    <TextBlock x:Name="HeaderText" FontSize="20" FontWeight="Bold" Text="Settings"/>
+    <StackPanel Grid.Row="1" Spacing="10" Margin="0,14,0,0">
+      <CheckBox x:Name="TrackingToggle" Content="tracking"/>
+      <CheckBox x:Name="AutostartToggle" Content="autostart"/>
+    </StackPanel>
+    <TextBlock Grid.Row="2" x:Name="ExclLabel" Classes="lab" Text="EXCLUSIONS" Margin="0,16,0,6"/>
+    <Border Grid.Row="3" Classes="appTile" Padding="6">
+      <ScrollViewer>
+        <StackPanel x:Name="ExclList" Spacing="2"/>
+      </ScrollViewer>
+    </Border>
+    <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" Margin="0,14,0,0">
+      <Button x:Name="OpenFolderBtn" Content="Open folder"/>
+      <Button x:Name="ClearBtn" Content="Clear"/>
+      <StackPanel x:Name="ConfirmPanel" Orientation="Horizontal" Spacing="8" IsVisible="False">
+        <TextBlock x:Name="ConfirmText" VerticalAlignment="Center"/>
+        <Button x:Name="ConfirmYes" Classes="share" Content="Delete"/>
+        <Button x:Name="ConfirmNo" Content="Cancel"/>
+      </StackPanel>
+    </StackPanel>
+  </Grid>
+</Window>
