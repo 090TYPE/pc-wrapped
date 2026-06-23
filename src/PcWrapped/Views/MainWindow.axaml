@@ -6,7 +6,7 @@
         x:Class="PcWrapped.Views.MainWindow"
         Width="900" Height="620" MinWidth="760" MinHeight="520"
         Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
-        Title="PC Wrapped">
+        Title="PC Wrapped" Icon="/Assets/app.ico">
   <Grid ColumnDefinitions="180,*,240">
 
     <!-- LEFT RAIL -->

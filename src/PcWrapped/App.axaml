@@ -77,7 +77,7 @@
 
     <TrayIcon.Icons>
         <TrayIcons>
-            <TrayIcon ToolTipText="PC Wrapped">
+            <TrayIcon ToolTipText="PC Wrapped" Icon="/Assets/app.ico">
                 <TrayIcon.Menu>
                     <NativeMenu>
                         <NativeMenuItem Header="Открыть" Click="OnOpenClicked"/>
