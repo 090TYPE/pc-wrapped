@@ -1,3 +1,5 @@
 .superpowers/
 bin/
 obj/
+dist/
+installer/Output/
