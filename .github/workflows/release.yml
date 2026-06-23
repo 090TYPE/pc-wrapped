@@ -1,0 +1,45 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Test
+        run: dotnet test PcWrapped.slnx -c Release
+
+      - name: Publish portable exe
+        run: >
+          dotnet publish src/PcWrapped -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o dist
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Build installer
+        run: '& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\pcwrapped.iss'
+
+      # Optional code signing — enable when you have a certificate in repo secrets:
+      # - name: Sign
+      #   run: |
+      #     signtool sign /fd SHA256 /f cert.pfx /p "${{ secrets.CERT_PASSWORD }}" dist\PcWrapped.exe installer\Output\PCWrapped-Setup.exe
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/PcWrapped.exe
+            installer/Output/PCWrapped-Setup.exe
