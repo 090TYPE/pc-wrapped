@@ -126,4 +126,38 @@ public class SqliteStatsRepositoryTests
         Assert.Single(map);
         Assert.Equal(Category.Other, map["vlc"]);
     }
+
+    [Fact]
+    public async Task Exclusions_AddRemoveGet()
+    {
+        var repo = await NewRepoAsync();
+        await repo.AddExclusionAsync("discord");
+        await repo.AddExclusionAsync("discord"); // idempotent
+        await repo.AddExclusionAsync("steam");
+        Assert.True((await repo.GetExclusionsAsync()).Contains("DISCORD")); // case-insensitive
+        await repo.RemoveExclusionAsync("discord");
+        var set = await repo.GetExclusionsAsync();
+        Assert.False(set.Contains("discord"));
+        Assert.True(set.Contains("steam"));
+    }
+
+    [Fact]
+    public async Task ClearAllData_WipesStatsButKeepsExclusions()
+    {
+        var repo = await NewRepoAsync();
+        var t = new DateTimeOffset(2026, 6, 9, 10, 0, 0, TimeSpan.Zero);
+        await repo.AddSampleAsync(new UsageSample(t, "code", "x", 60));
+        await repo.AddInputCountersAsync(new DateOnly(2026, 6, 9), new InputCounters(10, 2, 100));
+        await repo.UpsertAppPathAsync("code", @"C:\code.exe");
+        await repo.UpsertCategoryOverrideAsync("code", Category.Games);
+        await repo.AddExclusionAsync("discord");
+
+        await repo.ClearAllDataAsync();
+
+        Assert.Empty(await repo.GetSamplesAsync(t.AddDays(-1), t.AddDays(1)));
+        Assert.Equal(0, (await repo.GetInputCountersAsync(new DateOnly(2026, 6, 9), new DateOnly(2026, 6, 9))).Keystrokes);
+        Assert.Empty(await repo.GetAppPathsAsync());
+        Assert.Empty(await repo.GetCategoryOverridesAsync());
+        Assert.True((await repo.GetExclusionsAsync()).Contains("discord")); // exclusions preserved
+    }
 }

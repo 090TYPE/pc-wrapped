@@ -15,4 +15,8 @@ public interface IStatsRepository
     Task<IReadOnlyDictionary<string, string>> GetAppPathsAsync();
     Task UpsertCategoryOverrideAsync(string process, Category category);
     Task<IReadOnlyDictionary<string, Category>> GetCategoryOverridesAsync();
+    Task AddExclusionAsync(string process);
+    Task RemoveExclusionAsync(string process);
+    Task<IReadOnlySet<string>> GetExclusionsAsync();
+    Task ClearAllDataAsync();
 }

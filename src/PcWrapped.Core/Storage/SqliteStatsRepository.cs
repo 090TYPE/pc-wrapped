@@ -36,6 +36,9 @@ CREATE TABLE IF NOT EXISTS app_paths (
 CREATE TABLE IF NOT EXISTS category_overrides (
     process  TEXT PRIMARY KEY,
     category TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS excluded_apps (
+    process TEXT PRIMARY KEY
 );";
         await using var cmd = _conn.CreateCommand();
         cmd.CommandText = sql;
@@ -200,6 +203,46 @@ DROP TABLE _rollup;";
             if (Enum.TryParse<Category>(r.GetString(1), out var cat)) // skip unknown values safely
                 map[r.GetString(0)] = cat;
         return map;
+    }
+
+    public async Task AddExclusionAsync(string process)
+    {
+        await using var cmd = _conn.CreateCommand();
+        cmd.CommandText = "INSERT OR IGNORE INTO excluded_apps (process) VALUES ($p);";
+        cmd.Parameters.AddWithValue("$p", process);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task RemoveExclusionAsync(string process)
+    {
+        await using var cmd = _conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM excluded_apps WHERE process = $p COLLATE NOCASE;";
+        cmd.Parameters.AddWithValue("$p", process);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<IReadOnlySet<string>> GetExclusionsAsync()
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        await using var cmd = _conn.CreateCommand();
+        cmd.CommandText = "SELECT process FROM excluded_apps";
+        await using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync()) set.Add(r.GetString(0));
+        return set;
+    }
+
+    public async Task ClearAllDataAsync()
+    {
+        await using var tx = (Microsoft.Data.Sqlite.SqliteTransaction)await _conn.BeginTransactionAsync();
+        await using (var cmd = _conn.CreateCommand())
+        {
+            cmd.Transaction = tx;
+            cmd.CommandText =
+                "DELETE FROM samples; DELETE FROM input_counters; " +
+                "DELETE FROM app_paths; DELETE FROM category_overrides;";
+            await cmd.ExecuteNonQueryAsync();
+        }
+        await tx.CommitAsync();
     }
 
     public void Dispose() => _conn.Dispose();
